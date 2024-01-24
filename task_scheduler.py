@@ -14,44 +14,15 @@ config = configparser.ConfigParser()
 # 读取配置文件
 read_data = config.read('config.ini', encoding='utf-8')
 task_type = config.get('Settings', 'task_type')
-backup_enabled = config.getboolean('Settings', 'backup_enabled')
 program_path = config.get('Settings', 'program_path')
-backup_source = config.get('Settings', 'backup_source')
-backup_target = config.get('Settings', 'backup_target')
+
 rcon_path = config.get('Settings', 'rcon_path')
 restart_interval_hours = config.get('Settings', 'restart_interval_hours')
-backup_interval_hours = config.get('Settings', 'backup_interval_hours')
+
 
 restart_interval = int(restart_interval_hours) * 3600
 datetime_now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 appName = 'PalServer-Win64-Test-Cmd.exe'
-
-
-# 备份任务
-def backup_task():
-
-    # 如果备份间隔不为空，则执行备份
-    if backup_interval_hours:
-        backup_interval = int(backup_interval_hours) * 3600  # 将备份间隔转换为秒
-
-        while True:
-            # 备份文件
-            print("自动备份已开启")
-            os.chdir(rcon_path)
-            rcon_process = subprocess.Popen(['rcon.exe'], stdin=subprocess.PIPE)
-            rcon_process.communicate(
-                input='Save'.encode())
-            print("已发送RCON存档指令，正在进行备份......")
-            time.sleep(2)
-            shutil.copytree(backup_source, os.path.join(backup_target, f"Saved_{datetime_now}"))
-            print("备份成功，文件名为：Saved_" + datetime_now)
-
-            # 显示倒计时并等待指定的备份间隔
-            for i in range(backup_interval, 0, -1):
-                print(f'\r下一次备份将在 {i} 秒后开始...', end='')
-                time.sleep(1)
-    else:
-        print("自动备份未开启，需要自动备份请需改config.ini配置")
 
 
 # 轮询任务(固定延迟执行)
@@ -91,6 +62,7 @@ def polling_task():
             rcon_process.stdin.write(f'Broadcast The_server_is_about_to_restart_with_a_countdown_of_{i}_seconds.\n'.encode())
             rcon_process.stdin.flush()  # 确保消息被发送
             time.sleep(1)
+
 
 # 计划任务(每天特定时间执行)
 def scheduled_task():
