@@ -12,6 +12,7 @@ import os
 config = configparser.ConfigParser()
 
 read_data = config.read('config.ini', encoding='utf-8')
+
 backup_source = config.get('Settings', 'backup_source')
 backup_target = config.get('Settings', 'backup_target')
 backup_interval_hours = config.get('Settings', 'backup_interval_hours')
@@ -28,14 +29,9 @@ def backup_task():
 
         while True:
             # 备份文件
-            print("自动备份已开启")
-            os.chdir(rcon_path)
-            rcon_process = subprocess.Popen(['rcon.exe'], stdin=subprocess.PIPE)
-            rcon_process.communicate(
-                input='Save'.encode())
-            print("已发送RCON存档指令，正在进行备份......")
-            time.sleep(2)
+            print("自动备份已开启，正在进行备份......")
             shutil.copytree(backup_source, os.path.join(backup_target, f"Saved_{datetime_now}"))
+            time.sleep(1)
             print("备份成功，文件名为：Saved_" + datetime_now)
 
             # 显示倒计时并等待指定的备份间隔
@@ -44,3 +40,7 @@ def backup_task():
                 time.sleep(1)
     else:
         print("自动备份未开启，需要自动备份请需改config.ini配置")
+
+
+if __name__ == '__main__':
+    backup_task()
