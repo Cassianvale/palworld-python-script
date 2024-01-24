@@ -27,7 +27,7 @@ def backup_task():
         print("\n自动备份已开启，正在进行备份......")
         
         while True:
-            datetime_now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')  # 在循环内部重新计算时间戳
+            datetime_now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
             # 备份文件
             shutil.copytree(backup_source, os.path.join(backup_target, f"Saved_{datetime_now}"))
