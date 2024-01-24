@@ -11,6 +11,7 @@ import os
 # 创建一个配置文件解析器
 config = configparser.ConfigParser()
 
+read_data = config.read('config.ini', encoding='utf-8')
 backup_source = config.get('Settings', 'backup_source')
 backup_target = config.get('Settings', 'backup_target')
 backup_interval_hours = config.get('Settings', 'backup_interval_hours')
