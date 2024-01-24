@@ -95,12 +95,12 @@ def scheduled_task():
 
 # 轮询任务
 if task_type == '1':
-    print("当前进行的是轮询任务，已读取config配置")
+    print("当前运行的是轮询任务，已读取config配置")
     polling_task()
 # 计划任务
 elif task_type == '2':
-    print("当前进行的是计划任务，已读取config配置")
+    print("当前运行的是计划任务，已读取config配置")
     scheduled_task()
 else:
     print(
-        f"配置 config.ini 中的任务类型配置项 '{task_type}'无效")
+        f"配置 config.ini 中的任务类型配置项 'task_type = {task_type}'无效")
