@@ -5,12 +5,12 @@ import configparser
 import subprocess
 import time
 import os
-
-# 创建一个配置文件解析器
-config = configparser.ConfigParser()
+import codecs
 
 # 读取配置文件
-read_data = config.read('config.ini', encoding='utf-8')
+config = configparser.ConfigParser()
+with codecs.open('config.ini', 'r', encoding='utf-8-sig') as f:
+    config.read_file(f)
 program_path = config.get('Settings', 'program_path')
 rcon_enabled = config.getboolean('Settings', 'rcon_enabled')
 rcon_path = config.get('Settings', 'rcon_path')

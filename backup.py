@@ -6,12 +6,12 @@ import shutil
 import time
 import datetime
 import os
+import codecs
 
-# 创建一个配置文件解析器
+# 读取配置文件
 config = configparser.ConfigParser()
-
-read_data = config.read('config.ini', encoding='utf-8')
-
+with codecs.open('config.ini', 'r', encoding='utf-8-sig') as f:
+    config.read_file(f)
 backup_source = config.get('Settings', 'backup_source')
 backup_target = config.get('Settings', 'backup_target')
 backup_interval_hours = config.get('Settings', 'backup_interval_hours')
