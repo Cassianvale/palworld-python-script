@@ -116,10 +116,12 @@ if __name__ == '__main__':
     Task = TaskScheduler()
     daemon_enabled = Task.conf['daemon_enabled']
     if daemon_enabled:
+        INFO.logger.info("守护进程已启动,每隔{0}秒检测PalServer进程......".format(Task.conf['daemon_time']))
         print("守护进程已启动,每隔{0}秒检测PalServer进程......".format(Task.conf['daemon_time']))
         daemon_process = multiprocessing.Process(target=Task.daemon_task)
         daemon_process.start()
         daemon_process.join()
     else:
+        INFO.logger.info("轮询任务已启动,每隔{0}秒重启PalServer进程......".format(Task.conf['restart_interval']))
         print("轮询任务已启动,每隔{0}秒重启PalServer进程......".format(Task.conf['restart_interval']))
         Task.polling_task()
