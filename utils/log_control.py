@@ -9,7 +9,8 @@ from typing import Text
 import colorlog
 import time
 from pathlib import Path
-from utils.root_path import ensure_path_sep
+import sys
+import os
 
 
 class LogHandler:
@@ -30,7 +31,7 @@ class LogHandler:
             when: Text = "D",
     ):
         self.logger = logging.getLogger(filename)
-
+        print("Log file path:", os.path.abspath(filename))
         formatter = self.log_color()
 
         # 设置日志格式
@@ -57,7 +58,7 @@ class LogHandler:
         time_rotating.setFormatter(format_str)
 
         # 把对象加到logger
-        # self.logger.addHandler(screen_output) # 如果不需要屏幕到终端，注释掉这行
+        self.logger.addHandler(screen_output) # 如果不需要屏幕到终端，注释掉这行
         self.logger.addHandler(time_rotating)
 
     @classmethod
@@ -85,19 +86,29 @@ class LogHandler:
         return True
 
 
+# 获取当前脚本运行的绝对路径
+if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+    # 当脚本被 PyInstaller 打包为可执行文件时
+    current_directory = os.path.dirname(sys.executable)
+else:
+    # 当脚本以常规方式运行时
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+
 now_time_day = time.strftime("%Y-%m-%d", time.localtime())
 
-logs_dir = Path(ensure_path_sep("/logs"))
+logs_dir = Path(os.path.join(current_directory, "logs"))
 logs_dir.mkdir(parents=True, exist_ok=True)
 
-INFO = LogHandler(ensure_path_sep(f"\\logs\\info-{now_time_day}.log"), level='info')
+INFO = LogHandler(os.path.join(current_directory, f"logs/info-{now_time_day}.log"), level='info')
 INFO.logger.addFilter(lambda record: LogHandler.add_symbol(record, "✅"))
-ERROR = LogHandler(ensure_path_sep(f"\\logs\\error-{now_time_day}.log"), level='error')
+ERROR = LogHandler(os.path.join(current_directory, f"logs/error-{now_time_day}.log"), level='error')
 ERROR.logger.addFilter(lambda record: LogHandler.add_symbol(record, "❌"))
-WARNING = LogHandler(ensure_path_sep(f'\\logs\\warning-{now_time_day}.log'), level='warning')
+WARNING = LogHandler(os.path.join(current_directory, f'logs/warning-{now_time_day}.log'), level='warning')
 WARNING.logger.addFilter(lambda record: LogHandler.add_symbol(record, "⚠️"))
 
 if __name__ == '__main__':
+    print(os.path.join(current_directory, f"logs/info-{now_time_day}.log"))
     INFO.logger.info("success")
     ERROR.logger.error("error")
     WARNING.logger.warning("warning")
+    input("Press Enter to exit...")
