@@ -15,8 +15,9 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 
 ## Development Plan
 - [ ] Add multi-core custom startup parameters
-- [ ] Convert rcon-cli client to third-party rcon library
+- [ ] Add daemon process
 - [ ] Custom shutdown notification
+- [ ] Convert rcon-cli client to third-party rcon library
 
 ## Usage
 
