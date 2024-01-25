@@ -31,7 +31,7 @@ class LogHandler:
             when: Text = "D",
     ):
         self.logger = logging.getLogger(filename)
-        print("Log file path:", os.path.abspath(filename))
+
         formatter = self.log_color()
 
         # 设置日志格式
@@ -111,4 +111,4 @@ if __name__ == '__main__':
     INFO.logger.info("success")
     ERROR.logger.error("error")
     WARNING.logger.warning("warning")
-    input("Press Enter to exit...")
+    input("Press Enter to exit...\n")

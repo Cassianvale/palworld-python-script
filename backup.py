@@ -18,7 +18,7 @@ class Backup:
     # 备份任务
     def backup_task(self):
         # 在当前目录下创建名为Backup的文件夹
-        backup_dir = './Backup'
+        backup_dir = 'Backup'
         if not os.path.exists(backup_dir):
             os.makedirs(backup_dir)
 
@@ -33,10 +33,13 @@ class Backup:
 
                 # 备份文件
                 shutil.copytree(self.conf['backup_source'], os.path.join(backup_dir, f"Saved_{datetime_now}"))
+
                 time.sleep(1)
                 INFO.logger.info("备份成功，文件名为：Saved_" + datetime_now)
                 print("备份成功，文件名为：Saved_" + datetime_now)
-
+                # 存档备份位置
+                backup_path = os.path.join(os.getcwd(), backup_dir)
+                print(f"存档备份位置：{backup_path}")
                 # 显示倒计时并等待指定的备份间隔
                 for i in range(int(self.conf['backup_interval']), 0, -1):
                     print(f'\r下一次备份将在 {i} 秒后开始...', end='')
