@@ -14,10 +14,12 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 - task_scheduler.exe is a timed polling restart task and shutdown countdown, you can choose whether to open the shutdown countdown, if you choose True, you need to download the icon-cli client to connect (it will be changed to call the library directly in the future, it is too silly now)
 
 ## Development Plan
-- [ ] Add multi-core custom startup parameters
-- [ ] Add daemon process
-- [ ] Custom shutdown notification
-- [ ] Convert rcon-cli client to third-party rcon library
+
+- [x] Added custom startup parameters for multi-core
+- [x] Customized shutdown notifications
+- [x] Added daemon process
+- [x] Converted rcon-cli client to third-party rcon library
+- [x] Memory usage percentage check
 
 ## Usage
 
@@ -27,5 +29,5 @@ For specific usage, please refer to the Feishu document
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe
 
 ## Thanks
-rcon-cli client
-https://github.com/gorcon/rcon-cli
+rcon
+https://github.com/conqp/rcon

@@ -14,11 +14,12 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 - task_scheduler.exe为定时轮询重启任务和关服倒计时 ， 可以选择是否开启关服倒计时，选择True的话就需要下载icon-cli客户端进行连接(后面直接改成调库，现在这样太傻了)  
 
 ## 开发计划
-- [ ] 增加多核自定义启动参数
-- [ ] 自定义关服通知
-- [ ] 增加守护进程
-- [ ] rcon-cli客户端转为第三方rcon库
 
+- [x] 增加多核自定义启动参数
+- [x] 自定义关服通知
+- [x] 增加守护进程
+- [x] rcon-cli客户端转为第三方rcon库
+- [x] 内存使用百分比检测
 
 ## 使用方法
 
@@ -27,6 +28,6 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 具体使用请参考飞书文档  
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe
 
-## Thanks
-rcon-cli客户端
-https://github.com/gorcon/rcon-cli
+## 感谢
+rcon
+https://github.com/conqp/rcon
