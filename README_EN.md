@@ -23,3 +23,7 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 2. Run `config.ini` in the same directory as `task_scheduler.exe`
 For specific usage, please refer to the Feishu document  
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe
+
+## Thanks
+rcon-cli client
+https://github.com/gorcon/rcon-cli

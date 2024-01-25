@@ -23,3 +23,7 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 2.配置`config.ini`与`task_scheduler.exe`同目录运行  
 具体使用请参考飞书文档  
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe
+
+## Thanks
+rcon-cli客户端
+https://github.com/gorcon/rcon-cli
