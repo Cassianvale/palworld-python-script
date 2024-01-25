@@ -21,9 +21,12 @@ def read_config():
     memory_monitor_enabled = config.getboolean('Memory', 'memory_monitor_enabled')
     polling_interval_seconds = config.getint('Memory', 'polling_interval_seconds')
     memory_usage_threshold = config.getint('Memory', 'memory_usage_threshold')
-
-    rcon_enabled = config.getboolean('RCON', 'rcon_enabled')
     shutdown_notices = dict(item.split(':') for item in config.get('RCON', 'shutdown_notices').split(';'))
+    rcon_enabled = config.getboolean('RCON', 'rcon_enabled')
+    rcon_host = config.get('RCON', 'HOST')
+    rcon_port = config.getint('RCON', 'PORT')
+    rcon_password = config.get('RCON', 'AdminPassword')
+    rcon_command = config.get('RCON', 'COMMAND')
 
     # 将小时和分钟转换为秒
     restart_interval = (restart_interval_hours * 60 + restart_interval_minutes) * 60
@@ -34,6 +37,10 @@ def read_config():
         'backup_source': backup_source,
         'use_multicore_options': use_multicore_options,
         'rcon_enabled': rcon_enabled,
+        'rcon_host': rcon_host,
+        'rcon_port': rcon_port,
+        'rcon_password': rcon_password,
+        'rcon_command': rcon_command,
         'backup_interval': backup_interval,
         'restart_interval': restart_interval,
         'shutdown_notices': shutdown_notices,
