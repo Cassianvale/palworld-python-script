@@ -40,6 +40,11 @@ class TaskScheduler:
     def polling_task(self):
 
         while True:
+            if self.conf['restart_interval'] < 60:
+                INFO.logger.error("服务器重启时间 restart_interval 必须大于等于1分钟，请重新设置！")
+                print("服务器重启时间 restart_interval 必须大于等于1分钟，请重新设置！")
+                time.sleep(3)
+                exit(0)
             INFO.logger.info("正在关闭任何在运行的palserver服务......")
             print("正在关闭任何在运行的palserver服务......")
             subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
@@ -56,19 +61,29 @@ class TaskScheduler:
 
             INFO.logger.info(f'服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
             print(f'服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
+
+            # 如果设置了检查内存使用情况memory_monitor_enabled
+            if self.conf['memory_monitor_enabled']:
+                print("已开启内存监控，将在内存使用超过阈值时重启程序......")
+
             # 服务器持续运行时间(重启间隔)
             for i in range(int(self.conf['restart_interval']), 0, -1):
-
-                # 如果设置了检查内存使用情况memory_monitor_enabled
                 if self.conf['memory_monitor_enabled']:
-                    # 检查内存使用情况
-                    mem_info = psutil.virtual_memory()
-                    mem_usage = mem_info.percent  # 获取内存使用百分比
+                    if self.conf['polling_interval_seconds'] > 5:
+                        # 检查内存使用情况
+                        mem_info = psutil.virtual_memory()
+                        mem_usage = mem_info.percent  # 获取内存使用百分比
+                        # 如果内存使用超过阈值，则跳出倒计时，进行重启操作
+                        if mem_usage > self.conf['memory_usage_threshold']:
+                            print(f"内存使用超过{self.conf['memory_usage_threshold']}%，正在重启程序......")
+                            break
+                    else:
+                        INFO.logger.error("轮询间隔 polling_interval_seconds 必须大于等于5秒，请重新设置！")
+                        print("轮询间隔 polling_interval_seconds 必须大于5秒，请重新设置！")
+                        time.sleep(3)
+                        exit(0)
 
-                    # 如果内存使用超过阈值，则跳出倒计时，进行重启操作
-                    if mem_usage > self.conf['memory_usage_threshold']:
-                        print(f"内存使用超过{self.conf['memory_usage_threshold']}%，正在重启程序......")
-                        break
+                print(f'\r服务器将在 {i} 秒后重启......', end='')
 
                 # 还剩30秒的时候发送rcon关服消息提醒
                 if str(i) in self.conf['shutdown_notices'] and self.conf['rcon_enabled']:  # 检查是否有对应的通知
@@ -84,6 +99,7 @@ class TaskScheduler:
                             response = client.run(f"{self.conf['rcon_command']} {message}", 'utf-8')
                             INFO.logger.info('Response:{0}'.format(response))
                             print('Response:', response)
+
                 print(f'\r服务器将在 {i} 秒后重启......', end='')
                 time.sleep(1)
 
@@ -101,13 +117,15 @@ class TaskScheduler:
                     time.sleep(1)
                     program_args = [self.conf['program_path']]
                     if self.conf['use_multicore_options']:
+                        INFO.logger.info("守护进程已开启多核选项")
+                        print("守护进程已开启多核选项")
                         program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
                     subprocess.Popen(program_args)
                 time.sleep(int(self.conf['daemon_time']))
 
             # 只有异常退出才会触发，手动关闭进程不会触发
             except Exception as e:
-                ERROR.logger.error(f"程序异常终止，错误信息：{e}\n正在尝试重启程序......")
+                INFO.logger.error(f"程序异常终止，错误信息：{e}\n正在尝试重启程序......")
                 print(f"程序异常终止，错误信息：{e}\n正在尝试重启程序......")
                 continue
 

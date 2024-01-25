@@ -45,9 +45,17 @@ class Backup:
                     print(f'\r下一次备份将在 {i} 秒后开始...', end='')
                     time.sleep(1)
 
+        # 备份时间必须大于等于60秒
+        elif int(self.conf['backup_interval']) < 60:
+            INFO.logger.error("备份时间 backup_interval 必须大于等于1分钟，请重新设置！")
+            print("备份时间 backup_interval 备份时间必须大于等于1分钟，请重新设置！")
+            time.sleep(3)
+            exit(0)
+
+        # 如果为空，则不执行备份
         else:
-            INFO.logger.info("自动备份未开启，需要自动备份请需改config.ini配置")
-            print("自动备份未开启，需要自动备份请需改config.ini配置")
+            INFO.logger.info("自动备份已关闭，不执行备份任务！")
+            print("自动备份已关闭，不执行备份任务！")
 
 
 if __name__ == '__main__':

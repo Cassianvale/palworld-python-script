@@ -58,7 +58,7 @@ class LogHandler:
         time_rotating.setFormatter(format_str)
 
         # 把对象加到logger
-        self.logger.addHandler(screen_output) # 如果不需要屏幕到终端，注释掉这行
+        # self.logger.addHandler(screen_output) # 如果不需要屏幕到终端，注释掉这行
         self.logger.addHandler(time_rotating)
 
     @classmethod
@@ -92,7 +92,7 @@ if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
     current_directory = os.path.dirname(sys.executable)
 else:
     # 当脚本以常规方式运行时
-    current_directory = os.path.dirname(os.path.abspath(__file__))
+    current_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 now_time_day = time.strftime("%Y-%m-%d", time.localtime())
 
