@@ -10,6 +10,7 @@ import read_conf
 from utils.log_control import INFO
 from rcon.source import Client
 from rcon.source.proto import Packet
+from multiprocessing import Process
 
 
 class TaskScheduler:
@@ -38,6 +39,11 @@ class TaskScheduler:
 
     # 轮询任务(固定延迟执行)
     def polling_task(self):
+
+        # 如果设置了守护进程daemon_enabled (多进程) 则启动守护进程
+        if self.conf['daemon_enabled']:
+            daemon_process = Process(target=self.daemon_task)
+            daemon_process.start()
 
         while True:
             if self.conf['restart_interval'] < 60:
@@ -130,16 +136,15 @@ class TaskScheduler:
                 continue
 
 
-if __name__ == '__main__':
-    Task = TaskScheduler()
-    daemon_enabled = Task.conf['daemon_enabled']
-    if daemon_enabled:
-        INFO.logger.info("守护进程已启动,每隔{0}秒检测PalServer进程......".format(Task.conf['daemon_time']))
-        print("守护进程已启动,每隔{0}秒检测PalServer进程......".format(Task.conf['daemon_time']))
-        daemon_process = multiprocessing.Process(target=Task.daemon_task)
-        daemon_process.start()
-        daemon_process.join()
+def main():
+    scheduler = TaskScheduler()
+    # 如果 设置了守护进程为True，且未设置轮询任务，则执行守护进程任务
+    if scheduler.conf['daemon_enabled'] and not scheduler.conf['polling_enabled']:
+        scheduler.daemon_task()
+    # 否则 执行轮询任务
     else:
-        INFO.logger.info("轮询任务已启动,每隔{0}秒重启PalServer进程......".format(Task.conf['restart_interval']))
-        print("轮询任务已启动,每隔{0}秒重启PalServer进程......".format(Task.conf['restart_interval']))
-        Task.polling_task()
+        scheduler.polling_task()
+
+
+if __name__ == '__main__':
+    main()

@@ -15,6 +15,7 @@ def read_config():
     use_multicore_options = config.getboolean('Settings', 'use_multicore_options')
     backup_interval_hours = config.getint('Settings', 'backup_interval_hours')
     backup_interval_minutes = config.getint('Settings', 'backup_interval_minutes')
+    polling_enabled = config.getboolean('Settings', 'polling_enabled')
     restart_interval_hours = config.getint('Settings', 'restart_interval_hours')
     restart_interval_minutes = config.getint('Settings', 'restart_interval_minutes')
     daemon_enabled = config.getboolean('Settings', 'daemon_enabled')
@@ -43,6 +44,7 @@ def read_config():
         'rcon_password': rcon_password,
         'rcon_command': rcon_command,
         'backup_interval': backup_interval,
+        'polling_enabled': polling_enabled,
         'restart_interval': restart_interval,
         'shutdown_notices': shutdown_notices,
         'daemon_enabled': daemon_enabled,
