@@ -6,15 +6,18 @@ import subprocess
 import time
 import os
 import codecs
+from rcon.battleye import Client
 
 # 读取配置文件
 config = configparser.ConfigParser()
 with codecs.open('config.ini', 'r', encoding='utf-8-sig') as f:
     config.read_file(f)
 program_path = config.get('Settings', 'program_path')
-rcon_enabled = config.getboolean('Settings', 'rcon_enabled')
-rcon_path = config.get('Settings', 'rcon_path')
+rcon_enabled = config.getboolean('RCON', 'rcon_enabled')
+
 restart_interval_hours = config.get('Settings', 'restart_interval_hours')
+
+shutdown_notices = dict(item.split(':') for item in config.get('Settings', 'shutdown_notices').split(';'))
 
 restart_interval = float(restart_interval_hours) * 3600
 appName = 'PalServer-Win64-Test-Cmd.exe'
@@ -38,18 +41,19 @@ def polling_task():
 
         # 服务器持续运行时间(重启间隔)
         for i in range(int(restart_interval), 0, -1):
-            print(f'\r服务器将在 {i} 秒后重启......', end='')
-            time.sleep(1)
+
             # 还剩30秒的时候发送rcon关服消息提醒
-            if i <= 30 and i % 10 == 0 and rcon_enabled:  # 检查 rcon_enabled 设置
+            if str(i) in shutdown_notices and rcon_enabled:  # 检查是否有对应的通知
                 print("\n正在打开rcon.exe......")
                 os.chdir(rcon_path)
                 # 启动rcon.exe并发送命令
                 rcon_process = subprocess.Popen(['rcon.exe'], stdin=subprocess.PIPE)
-                rcon_process.stdin.write(
-                    f'Broadcast The_server_is_about_to_restart_with_a_countdown_of_{i}_seconds.\n'.encode())
+                rcon_process.stdin.write((shutdown_notices[str(i)] + '\n').encode())
                 rcon_process.stdin.flush()  # 确保消息被发送
                 rcon_process.stdin.close()
+
+            print(f'\r服务器将在 {i} 秒后重启......', end='')
+            time.sleep(1)
 
 
 if __name__ == '__main__':
