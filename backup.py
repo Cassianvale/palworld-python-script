@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
-import configparser
 import shutil
 import time
 import datetime
 import os
-import codecs
 import read_conf
 from utils.log_control import INFO, ERROR, WARNING
 
