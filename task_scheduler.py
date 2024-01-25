@@ -7,7 +7,7 @@ import time
 import psutil
 import multiprocessing
 import read_conf
-from utils.log_control import INFO, ERROR, WARNING
+from utils.log_control import INFO
 from rcon.source import Client
 from rcon.source.proto import Packet
 

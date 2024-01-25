@@ -79,11 +79,11 @@ class LogHandler:
         )
         return formatter
 
-    @staticmethod
-    def add_symbol(record, symbol):
-        """ 在日志消息前添加符号 """
-        record.msg = f"{symbol} {record.msg}"
-        return True
+    # @staticmethod
+    # def add_symbol(record, symbol):
+    #     """ 在日志消息前添加符号 """
+    #     record.msg = f"{symbol} {record.msg}"
+    #     return True
 
 
 # 获取当前脚本运行的绝对路径
@@ -99,16 +99,30 @@ now_time_day = time.strftime("%Y-%m-%d", time.localtime())
 logs_dir = Path(os.path.join(current_directory, "logs"))
 logs_dir.mkdir(parents=True, exist_ok=True)
 
+
+def add_symbol(record, level, symbol):
+    """ 在特定级别的日志消息前添加符号 """
+    if record.levelname == level:
+        record.msg = f"{symbol} {record.msg}"
+    return True
+
+
 INFO = LogHandler(os.path.join(current_directory, f"logs/info-{now_time_day}.log"), level='info')
-INFO.logger.addFilter(lambda record: LogHandler.add_symbol(record, "✅"))
-ERROR = LogHandler(os.path.join(current_directory, f"logs/error-{now_time_day}.log"), level='error')
-ERROR.logger.addFilter(lambda record: LogHandler.add_symbol(record, "❌"))
-WARNING = LogHandler(os.path.join(current_directory, f'logs/warning-{now_time_day}.log'), level='warning')
-WARNING.logger.addFilter(lambda record: LogHandler.add_symbol(record, "⚠️"))
+INFO.logger.addFilter(lambda record: add_symbol(record, "INFO", "✅"))
+INFO.logger.addFilter(lambda record: add_symbol(record, "ERROR", "❌"))
+INFO.logger.addFilter(lambda record: add_symbol(record, "WARNING", "⚠️"))
+
+# ERROR = LogHandler(os.path.join(current_directory, f"logs/error-{now_time_day}.log"), level='error')
+# ERROR.logger.addFilter(lambda record: LogHandler.add_symbol(record, "❌"))
+# WARNING = LogHandler(os.path.join(current_directory, f'logs/warning-{now_time_day}.log'), level='warning')
+# WARNING.logger.addFilter(lambda record: LogHandler.add_symbol(record, "⚠️"))
+
 
 if __name__ == '__main__':
     print(os.path.join(current_directory, f"logs/info-{now_time_day}.log"))
     INFO.logger.info("success")
-    ERROR.logger.error("error")
-    WARNING.logger.warning("warning")
+    INFO.logger.error("error")
+    INFO.logger.warning("warning")
+    # ERROR.logger.error("error")
+    # WARNING.logger.warning("warning")
     input("Press Enter to exit...\n")

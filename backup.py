@@ -6,7 +6,7 @@ import time
 import datetime
 import os
 import read_conf
-from utils.log_control import INFO, ERROR, WARNING
+from utils.log_control import INFO
 
 
 class Backup:
