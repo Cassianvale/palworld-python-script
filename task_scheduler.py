@@ -48,25 +48,23 @@ class TaskScheduler:
                 print("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于等于1分钟，请重新设置！")
                 time.sleep(3)
                 exit(0)
-            INFO.logger.info("[ 轮询任务 ] 正在关闭任何在运行的 PalServer 服务......")
-            print("\r\033[K", end='')
-            print("[ 轮询任务 ] 正在关闭任何在运行的 PalServer 服务......")
-            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
 
-            # 启动程序
-            INFO.logger.info("[ 轮询任务 ] 正在启动程序......")
-            print("[ 轮询任务 ] 正在启动程序......")
-            program_args = [self.conf['program_path']]
-            if self.conf['arguments']:
-                INFO.logger.info("[ 轮询任务 ] 已配置额外参数")
-                print("[ 轮询任务 ] 已配置额外参数")
-                program_args.extend(self.conf['arguments'].split())
-            if self.conf['use_multicore_options']:
-                INFO.logger.info("[ 轮询任务 ] 已开启多核选项")
-                print("[ 轮询任务 ] 已开启多核选项")
-                program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
-            print("[ 轮询任务 ] 启动参数：", self.conf['arguments'].split())
-            subprocess.Popen(program_args)
+            # 启动程序前检查, 如果存在服务端则不再进行启动操作,改为每次循环结尾关闭进程
+            result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq PalServer.exe'], capture_output=True, text=True)
+            if 'PalServer.exe' not in result.stdout:
+                INFO.logger.info("[ 轮询任务 ] 正在启动程序......")
+                print("[ 轮询任务 ] 正在启动程序......")
+                program_args = [self.conf['program_path']]
+                if self.conf['arguments']:
+                    INFO.logger.info("[ 轮询任务 ] 已配置额外参数")
+                    print("[ 轮询任务 ] 已配置额外参数")
+                    program_args.extend(self.conf['arguments'].split())
+                if self.conf['use_multicore_options']:
+                    INFO.logger.info("[ 轮询任务 ] 已开启多核选项")
+                    print("[ 轮询任务 ] 已开启多核选项")
+                    program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
+                print("[ 轮询任务 ] 启动参数：", self.conf['arguments'].split())
+                subprocess.Popen(program_args)
 
             INFO.logger.info(f'[ 轮询任务 ] 服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
             print(f'[ 轮询任务 ] 服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
@@ -112,6 +110,12 @@ class TaskScheduler:
                             
                 print(f'\r[ 轮询任务 ] 服务器将在 {i} 秒后重启......', end='')
                 time.sleep(1)
+            # 关闭服务端 放在循环的结尾,可以让用户不用关闭服务器的情况下启动本脚本
+            INFO.logger.info("[ 轮询任务 ] 正在关闭任何在运行的 PalServer 服务......")
+            print("\r\033[K", end='')
+            print("[ 轮询任务 ] 正在关闭任何在运行的 PalServer 服务......")
+            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
+
 
     def start_daemon(self):
         # 守护进程代码
