@@ -13,13 +13,16 @@ config = configparser.ConfigParser()
 with codecs.open('config.ini', 'r', encoding='utf-8-sig') as f:
     config.read_file(f)
 backup_source = config.get('Settings', 'backup_source')
-backup_target = config.get('Settings', 'backup_target')
 backup_interval_hours = config.get('Settings', 'backup_interval_hours')
-rcon_path = config.get('Settings', 'rcon_path')
 
 
 # 备份任务
 def backup_task():
+
+    # 在当前目录下创建名为Backup的文件夹
+    backup_dir = './Backup'
+    if not os.path.exists(backup_dir):
+        os.makedirs(backup_dir)
 
     # 如果备份间隔不为空，则执行备份
     if backup_interval_hours:
@@ -30,7 +33,7 @@ def backup_task():
             datetime_now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
             # 备份文件
-            shutil.copytree(backup_source, os.path.join(backup_target, f"Saved_{datetime_now}"))
+            shutil.copytree(backup_source, os.path.join(backup_dir, f"Saved_{datetime_now}"))
             time.sleep(1)
             print("备份成功，文件名为：Saved_" + datetime_now)
 
