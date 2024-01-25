@@ -5,16 +5,14 @@ import configparser
 import subprocess
 import time
 import os
-import psutil
 
 # 创建一个配置文件解析器
 config = configparser.ConfigParser()
 
 # 读取配置文件
 read_data = config.read('config.ini', encoding='utf-8')
-# task_type = config.get('Settings', 'task_type')
 program_path = config.get('Settings', 'program_path')
-
+rcon_enabled = config.getboolean('Settings', 'rcon_enabled')
 rcon_path = config.get('Settings', 'rcon_path')
 restart_interval_hours = config.get('Settings', 'restart_interval_hours')
 
@@ -43,7 +41,7 @@ def polling_task():
             print(f'\r服务器将在 {i} 秒后重启......', end='')
             time.sleep(1)
             # 还剩30秒的时候发送rcon关服消息提醒
-            if i <= 30 and i % 10 == 0:
+            if i <= 30 and i % 10 == 0 and rcon_enabled:  # 检查 rcon_enabled 设置
                 print("\n正在打开rcon.exe......")
                 os.chdir(rcon_path)
                 # 启动rcon.exe并发送命令
@@ -53,49 +51,6 @@ def polling_task():
                 rcon_process.stdin.flush()  # 确保消息被发送
                 rcon_process.stdin.close()
 
-
-# def scheduled_task():
-#
-#     # 删除没有后缀数字的任务
-#     subprocess.run(['schtasks', '/Delete', '/TN', 'PalServerRestart', '/F'], stderr=subprocess.DEVNULL)
-#     subprocess.run(['schtasks', '/Delete', '/TN', 'PalServerRestart1', '/F'], stderr=subprocess.DEVNULL)
-#     subprocess.run(['schtasks', '/Delete', '/TN', 'PalServerRestart2', '/F'], stderr=subprocess.DEVNULL)
-#     subprocess.run(['schtasks', '/Delete', '/TN', 'PalServerRestart3', '/F'], stderr=subprocess.DEVNULL)
-#
-#     print("正在关闭任何在运行的palserver服务......")
-#     subprocess.run(['taskkill', '/f', '/im', appName], stderr=subprocess.DEVNULL)
-#
-#     # 启动程序
-#     print("正在启动程序......")
-#     subprocess.Popen([program_path])
-#
-#     # 对于每个计划任务，如果设置的时间不为空，则创建计划任务
-#     for i in range(1, 4):
-#         task_name = f'PalServerRestart{i}'
-#         start_time = config.get('Settings', f'start_time_{i}')
-#
-#         if start_time:
-#             # 创建新任务
-#             subprocess.run(
-#                 ['SCHTASKS', '/Create', '/SC', 'DAILY', '/TN', task_name, '/TR', f'{program_path}', '/ST', start_time])
-#             print(f"新计划任务'{task_name}'创建成功，每天将在{start_time}重启服务器")
-#
-#     # 无限循环，保持终端窗口开启
-#     while True:
-#         time.sleep(1)
-
-#
-# # 轮询任务
-# if task_type == '1':
-#     print("当前运行的是轮询任务，已读取config配置")
-#     polling_task()
-# # 计划任务
-# elif task_type == '2':
-#     print("当前运行的是计划任务，已读取config配置")
-#     scheduled_task()
-# else:
-#     print(
-#         f"配置 config.ini 中的任务类型配置项 'task_type = {task_type}'无效")
 
 if __name__ == '__main__':
     polling_task()
