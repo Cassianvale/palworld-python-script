@@ -4,14 +4,12 @@
 
 import subprocess
 import time
-import os
-import codecs
 import psutil
 import multiprocessing
 import read_conf
 from utils.log_control import INFO, ERROR, WARNING
 from rcon.source import Client
-from rcon.source.proto import Packet, Type
+from rcon.source.proto import Packet
 
 
 class TaskScheduler:
