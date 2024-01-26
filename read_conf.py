@@ -12,7 +12,6 @@ def read_config():
         config.read_file(f)
     program_path = config.get('Settings', 'program_path')
     backup_source = config.get('Settings', 'backup_source')
-    arguments = config.get('Settings', 'arguments')
     use_multicore_options = config.getboolean('Settings', 'use_multicore_options')
     backup_interval_hours = config.getint('Settings', 'backup_interval_hours')
     backup_interval_minutes = config.getint('Settings', 'backup_interval_minutes')
@@ -38,7 +37,6 @@ def read_config():
     return {
         'program_path': program_path,
         'backup_source': backup_source,
-        'arguments': arguments,
         'use_multicore_options': use_multicore_options,
         'rcon_enabled': rcon_enabled,
         'rcon_host': rcon_host,
