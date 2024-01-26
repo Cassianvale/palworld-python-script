@@ -3,7 +3,6 @@
 .vscode
 Backup
 logs
-palworld-python-script.zip
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

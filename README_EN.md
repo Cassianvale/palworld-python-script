@@ -10,9 +10,8 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 2. Send shutdown countdown via RCON commands before server restart
 3. Customize the backup time of the archive
 
-- backup.exe only  
-- task_scheduler.exe  
-- config.ini
+- backup.exe only has a backup function
+- task_scheduler.exe is a timed polling restart task and shutdown countdown, you can choose whether to open the shutdown countdown, if you choose True, you need to download the icon-cli client to connect (it will be changed to call the library directly in the future, it is too silly now)
 
 ## Development Plan
 
