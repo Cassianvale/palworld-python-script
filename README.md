@@ -6,13 +6,9 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 
 ## 主要功能
 
-1.轮询任务重启服务端  
-2.重启服务端前通过RCON指令发送关服倒计时  
-3.自定义存档备份时间  
-
-- backup.exe
-- task_scheduler.exe
-- config.ini
+1.轮询任务重启服务端
+2.重启服务端前通过RCON指令发送关服倒计时
+3.自定义存档备份时间
 
 ## 开发计划
 
@@ -24,9 +20,12 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 
 ## 使用方法
 
-1.`pyinstaller --onefile task_scheduler.py`打包成exe文件  
-2.配置`config.ini`与`task_scheduler.exe`同目录运行  
-具体使用请参考飞书文档  
+1.确保你安装了 Python 环境版本 3.8 或更高版本
+2.执行命令安装依赖 `pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple`
+3.运行python脚本 `pyinstaller.py` 打包 `backup.exe`, `task_scheduler.exe`, `config.ini`
+2.配置 `config.ini` 与exe程序同目录运行
+
+具体使用请参考飞书文档
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe
 
 ## 感谢

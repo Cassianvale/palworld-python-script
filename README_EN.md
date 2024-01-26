@@ -10,8 +10,8 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 2. Send shutdown countdown via RCON commands before server restart
 3. Customize the backup time of the archive
 
-- backup.exe only  
-- task_scheduler.exe  
+- backup.exe only
+- task_scheduler.exe
 - config.ini
 
 ## Development Plan
@@ -24,9 +24,11 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 
 ## Usage
 
-1. Package `task_scheduler.py` into an exe file with `pyinstaller --onefile task_scheduler.py`
-2. Run `config.ini` in the same directory as `task_scheduler.exe`
-For specific usage, please refer to the Feishu document  
+1. Ensure that you have Python environment version 3.8 or higher installed.
+2. Run the command `pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` to install the dependencies.
+3. Run the Python script `pyinstaller.py` to package `backup.exe`, `task_scheduler.exe`, and `config.ini`.
+4. Configure `config.ini` and run it in the same directory as the exe program.
+For specific usage, please refer to the Feishu document
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe
 
 ## Thanks
