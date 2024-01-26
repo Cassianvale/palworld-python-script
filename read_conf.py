@@ -4,12 +4,14 @@
 import codecs
 import configparser
 import json
+import os
 
 
 def read_config():
     # 读取配置文件
     config = configparser.ConfigParser()
-    with codecs.open('config.ini', 'r', encoding='utf-8-sig') as f:
+    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
+    with codecs.open(config_path, 'r', encoding='utf-8-sig') as f:
         config.read_file(f)
     program_path = config.get('Settings', 'program_path')
     backup_source = config.get('Settings', 'backup_source')
