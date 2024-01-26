@@ -6,7 +6,7 @@ import time
 import datetime
 import os
 import read_conf
-from utils.log_control import INFO, ERROR, WARNING
+from utils.log_control import INFO
 
 
 class Backup:
@@ -18,7 +18,7 @@ class Backup:
     # 备份任务
     def backup_task(self):
         # 在当前目录下创建名为Backup的文件夹
-        backup_dir = './Backup'
+        backup_dir = 'Backup'
         if not os.path.exists(backup_dir):
             os.makedirs(backup_dir)
 
@@ -33,18 +33,29 @@ class Backup:
 
                 # 备份文件
                 shutil.copytree(self.conf['backup_source'], os.path.join(backup_dir, f"Saved_{datetime_now}"))
+
                 time.sleep(1)
                 INFO.logger.info("备份成功，文件名为：Saved_" + datetime_now)
                 print("备份成功，文件名为：Saved_" + datetime_now)
-
+                # 存档备份位置
+                backup_path = os.path.join(os.getcwd(), backup_dir)
+                print(f"存档备份位置：{backup_path}")
                 # 显示倒计时并等待指定的备份间隔
                 for i in range(int(self.conf['backup_interval']), 0, -1):
                     print(f'\r下一次备份将在 {i} 秒后开始...', end='')
                     time.sleep(1)
 
+        # 备份时间必须大于等于60秒
+        elif int(self.conf['backup_interval']) < 60:
+            INFO.logger.error("备份时间 backup_interval 必须大于等于1分钟，请重新设置！")
+            print("备份时间 backup_interval 备份时间必须大于等于1分钟，请重新设置！")
+            time.sleep(3)
+            exit(0)
+
+        # 如果为空，则不执行备份
         else:
-            INFO.logger.info("自动备份未开启，需要自动备份请需改config.ini配置")
-            print("自动备份未开启，需要自动备份请需改config.ini配置")
+            INFO.logger.info("自动备份已关闭，不执行备份任务！")
+            print("自动备份已关闭，不执行备份任务！")
 
 
 if __name__ == '__main__':
