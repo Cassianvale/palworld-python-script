@@ -3,6 +3,7 @@
 
 import codecs
 import configparser
+import json
 
 
 def read_config():
@@ -58,5 +59,5 @@ def read_config():
 if __name__ == '__main__':
     config = read_config()
     # 打印config中所有配置
-    print(config)
+    print(json.dumps(config, indent=4))
 
