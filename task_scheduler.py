@@ -38,6 +38,21 @@ class TaskScheduler:
 
     # Apply the monkey patch
     Client.run = patched_run
+    
+    def start_program(self):
+        INFO.logger.info("[ 启动任务 ] 正在启动程序......")
+        print("[ 启动任务 ] 正在启动程序......")
+        program_args = [self.conf['program_path']]
+        if self.conf['arguments']:
+            INFO.logger.info("[ 启动任务 ] 已配置额外参数")
+            print("[ 启动任务 ] 已配置额外参数")
+            program_args.extend(self.conf['arguments'].split())
+        if self.conf['use_multicore_options']:
+            INFO.logger.info("[ 启动任务 ] 已开启多核选项")
+            print("[ 启动任务 ] 已开启多核选项")
+            program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
+        print("[ 启动任务 ] 启动参数：", self.conf['arguments'].split())
+        subprocess.Popen(program_args)
             
     # 轮询任务(固定延迟执行)
     def polling_task(self):
@@ -52,19 +67,7 @@ class TaskScheduler:
             # 启动程序前检查, 如果存在服务端则不再进行启动操作,改为每次循环结尾关闭进程
             result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq PalServer.exe'], capture_output=True, text=True)
             if 'PalServer.exe' not in result.stdout:
-                INFO.logger.info("[ 轮询任务 ] 正在启动程序......")
-                print("[ 轮询任务 ] 正在启动程序......")
-                program_args = [self.conf['program_path']]
-                if self.conf['arguments']:
-                    INFO.logger.info("[ 轮询任务 ] 已配置额外参数")
-                    print("[ 轮询任务 ] 已配置额外参数")
-                    program_args.extend(self.conf['arguments'].split())
-                if self.conf['use_multicore_options']:
-                    INFO.logger.info("[ 轮询任务 ] 已开启多核选项")
-                    print("[ 轮询任务 ] 已开启多核选项")
-                    program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
-                print("[ 轮询任务 ] 启动参数：", self.conf['arguments'].split())
-                subprocess.Popen(program_args)
+                self.start_program()
 
             INFO.logger.info(f'[ 轮询任务 ] 服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
             print(f'[ 轮询任务 ] 服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
@@ -128,15 +131,7 @@ class TaskScheduler:
                     print('[ 守护进程 ] 监控到 PalServer 已停止,正在启动!!!')
 
                     # 启动程序
-                    program_args = [self.conf['program_path']]
-                    if self.conf['arguments']:
-                        print("[ 守护进程 ] 已配置额外参数")
-                        program_args.extend(self.conf['arguments'].split())
-                    if self.conf['use_multicore_options']:
-                        print("[ 守护进程 ] 已开启多核选项")
-                        program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
-                    print("[ 守护进程 ] 启动参数：", self.conf['arguments'].split())
-                    subprocess.Popen(program_args)
+                    self.start_program()
                         
                 else:
                     print("\r\033[K", end='')
