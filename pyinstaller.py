@@ -10,8 +10,15 @@ def package_scripts():
 
     scripts = ['task_scheduler.py', 'backup.py']
 
+    pyinstaller_path = shutil.which('pyinstaller')
+
+    if pyinstaller_path is None:
+        print('pyinstaller not found')
+        return
+
     for script in scripts:
-        command = ['pyinstaller', '--onefile', script]
+        print('打包', scripts)
+        command = ['pyinstaller.exe', '--onefile', script]
         subprocess.run(command)
 
     shutil.copy('config.ini', 'dist')
@@ -20,8 +27,9 @@ def package_scripts():
         os.remove('palworld-python-script.zip')
 
     shutil.make_archive('palworld-python-script', 'zip', 'dist')
+    print("palworld-python-script 打包成功！")
 
 
 if __name__ == '__main__':
     package_scripts()
-    print("palworld-python-script 打包成功！")
+
