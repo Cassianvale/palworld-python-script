@@ -29,7 +29,7 @@ https://github.com/Cassianvale/palworld-python-script/releases
 
 1.确保你安装了 Python 环境版本 3.8 或更高版本  
 2.执行命令安装依赖 `pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple`  
-3.运行python脚本 `pyinstaller.py` 打包 `backup.exe`, `task_scheduler.exe`, `config.ini`  
+3.控制台运行python脚本 `python pyinstaller.py` 打包 `backup.exe`, `task_scheduler.exe`, `config.ini`  
 2.配置 `config.ini` 与exe程序同目录运行  
 
 具体使用请参考飞书文档  

@@ -29,7 +29,7 @@ https://github.com/Cassianvale/palworld-python-script/releases
 
 1. Ensure that you have Python environment version 3.8 or higher installed.  
 2. Run the command `pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` to install the dependencies.  
-3. Run the Python script `pyinstaller.py` to package `backup.exe`, `task_scheduler.exe`, and `config.ini`.  
+3. Run the Python script from the console `python pyinstaller.py` to package `backup.exe`, `task_scheduler.exe`, and `config.ini`.
 4. Configure `config.ini` and run it in the same directory as the exe program.  
 For specific usage, please refer to the Feishu document  
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe  
