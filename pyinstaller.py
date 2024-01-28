@@ -18,7 +18,7 @@ def package_scripts():
 
     for script in scripts:
         print('打包', scripts)
-        command = ['pyinstaller.exe', '--onefile', script]
+        command = ['pyinstaller', '--onefile', script]
         subprocess.run(command)
 
     shutil.copy('config.ini', 'dist')
