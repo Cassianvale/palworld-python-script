@@ -5,6 +5,7 @@
 import subprocess
 import time
 import psutil
+import rcon
 import read_conf
 import threading
 from utils.log_control import INFO
@@ -102,15 +103,24 @@ class TaskScheduler:
                         INFO.logger.info("RCON指令 {0}，正在发送通知......".format(self.conf['rcon_command']))
                         print("\r\033[K", end='')
                         print("RCON指令 {0}，正在发送通知......".format(self.conf['rcon_command']))
-                        with Client(
-                                host=self.conf['rcon_host'],
-                                port=self.conf['rcon_port'],
-                                passwd=self.conf['rcon_password'],
-                                timeout=1) as client:
-                            message = self.conf['shutdown_notices'][str(i)]
-                            response = client.run(f"{self.conf['rcon_command']} {message}", 'utf-8')
-                            INFO.logger.info('Response:{0}'.format(response))
-                            print('Response:', response)
+                        try:
+                            with Client(
+                                    host=self.conf['rcon_host'],
+                                    port=self.conf['rcon_port'],
+                                    passwd=self.conf['rcon_password'],
+                                    timeout=1) as client:
+                                message = self.conf['shutdown_notices'][str(i)]
+                                response = client.run(f"{self.conf['rcon_command']} {message}", 'utf-8')
+                                INFO.logger.info('Response:{0}'.format(response))
+                                print('Response:', response)
+                        except TimeoutError:
+                            INFO.logger.error("RCON连接超时,请检查IP和端口是否填写正确")
+                            print("\r\033[K", end='')
+                            print("RCON连接超时,请检查IP和端口是否填写正确")
+                        except rcon.exceptions.WrongPassword:
+                            INFO.logger.error("RCON密码错误,请检查相关设置")
+                            print("\r\033[K", end='')
+                            print("RCON密码错误,请检查相关设置")
 
                 print(f'\r[ 轮询任务 ] 服务器将在 {i} 秒后重启......', end='')
                 time.sleep(1)
