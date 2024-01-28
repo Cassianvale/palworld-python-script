@@ -79,12 +79,6 @@ class LogHandler:
         )
         return formatter
 
-    # @staticmethod
-    # def add_symbol(record, symbol):
-    #     """ 在日志消息前添加符号 """
-    #     record.msg = f"{symbol} {record.msg}"
-    #     return True
-
 
 # 获取当前脚本运行的绝对路径
 if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
