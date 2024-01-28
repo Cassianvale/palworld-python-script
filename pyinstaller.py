@@ -29,6 +29,12 @@ def package_scripts():
     shutil.make_archive('palworld-python-script', 'zip', 'dist')
     print("palworld-python-script 打包成功！")
 
+    # 打包成功后放入dist文件夹，如果已存在则覆盖
+    if os.path.exists('dist/palworld-python-script.zip'):
+        os.remove('dist/palworld-python-script.zip')
+    shutil.move('palworld-python-script.zip', 'dist')
+    print("打包后的palworld-python-script.zip已放入dist文件夹！")
+
 
 if __name__ == '__main__':
     package_scripts()
