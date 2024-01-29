@@ -23,6 +23,7 @@ class TaskScheduler:
         self.rcon_command = self.conf['rcon_command']
         self.daemon_time = self.conf['daemon_time']
         self.arguments = self.conf.get('arguments', '').split()
+        self.is_first_run = True
 
     # 修改rcon源代码，忽略SessionTimeout异常
     def patched_run(self, command: str, *args: str, encoding: str = "utf-8") -> str:
@@ -39,10 +40,34 @@ class TaskScheduler:
     # Apply the monkey patch
     Client.run = patched_run
 
+    def check_rcon(self):
+        try:
+            with Client(
+                    host=self.conf['rcon_host'],
+                    port=self.conf['rcon_port'],
+                    passwd=self.conf['rcon_password'],
+                    timeout=1):
+
+                INFO.logger.info("[ RCON ] RCON连接正常")
+                print("[ RCON ] RCON连接正常")
+        except TimeoutError:
+            INFO.logger.error("[ RCON ] RCON连接超时,请检查IP和端口是否填写正确")
+            print("[ RCON ] RCON连接超时,请检查IP和端口是否填写正确")
+            time.sleep(2)
+            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
+            exit(0)
+        except rcon.exceptions.WrongPassword:
+            INFO.logger.error("[ RCON ] RCON密码错误,请检查相关设置")
+            print("[ RCON ] RCON密码错误,请检查相关设置")
+            time.sleep(2)
+            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
+            exit(0)
+
     def start_program(self):
         INFO.logger.info("[ 启动任务 ] 正在启动程序......")
         print("[ 启动任务 ] 正在启动程序......")
         program_args = [self.conf['program_path']]
+
         if self.conf['arguments']:
             INFO.logger.info("[ 启动任务 ] 已配置额外参数")
             print("[ 启动任务 ] 已配置额外参数")
@@ -52,7 +77,21 @@ class TaskScheduler:
             print("[ 启动任务 ] 已开启多核选项")
             program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
         print("[ 启动任务 ] 启动参数：", self.conf['arguments'].split())
+
         subprocess.Popen(program_args)
+
+        if self.conf['rcon_enabled']:
+            if self.is_first_run:  # 只有在首次运行时才检查RCON连接
+                INFO.logger.info("[ RCON ] 已开启RCON功能")
+                print("[ RCON ] 已开启RCON功能")
+                INFO.logger.info("[ RCON ] 正在检查RCON连接，请等待5秒......")
+                print("[ RCON ] 正在检查RCON连接，请等待5秒......")
+                time.sleep(5)
+                self.check_rcon()
+                self.is_first_run = False  # 首次启动后，将状态标志设置为False
+        else:
+            INFO.logger.info("[ RCON ] 未开启RCON功能")
+            print("[ RCON ] 未开启RCON功能")
 
     # 轮询任务(固定延迟执行)
     def polling_task(self):
@@ -61,7 +100,7 @@ class TaskScheduler:
             if self.conf['restart_interval'] < 60:
                 INFO.logger.error("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于等于1分钟，请重新设置！")
                 print("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于等于1分钟，请重新设置！")
-                time.sleep(3)
+                time.sleep(2)
                 exit(0)
 
             # 启动程序前检查, 如果存在服务端则不再进行启动操作,改为每次循环结尾关闭进程
@@ -92,7 +131,7 @@ class TaskScheduler:
                     else:
                         INFO.logger.error("[ 内存监控 ] 轮询间隔 polling_interval_seconds 必须大于等于5秒，请重新设置！")
                         print("[ 内存监控 ] 轮询间隔 polling_interval_seconds 必须大于5秒，请重新设置！")
-                        time.sleep(3)
+                        time.sleep(2)
                         exit(0)
 
                 print(f'\r[ 轮询任务 ] 服务器将在 {i} 秒后重启......', end='')
@@ -111,8 +150,8 @@ class TaskScheduler:
                                     timeout=1) as client:
                                 message = self.conf['shutdown_notices'][str(i)]
                                 response = client.run(f"{self.conf['rcon_command']} {message}", 'utf-8')
-                                INFO.logger.info('Response:{0}'.format(response))
-                                print('Response:', response)
+                                INFO.logger.info('[指令发送] {0}'.format(response))
+                                print('[指令发送] ', response)
                         except TimeoutError:
                             INFO.logger.error("RCON连接超时,请检查IP和端口是否填写正确")
                             print("\r\033[K", end='')

@@ -5,6 +5,8 @@ import subprocess
 import shutil
 import os
 
+"""小心别把自己的config.ini打包进去"""
+
 
 def remove_ds_store(dir):
     # 删除DS_Store
