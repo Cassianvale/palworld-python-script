@@ -41,27 +41,28 @@ class TaskScheduler:
     Client.run = patched_run
 
     def check_rcon(self):
-        try:
-            with Client(
-                    host=self.conf['rcon_host'],
-                    port=self.conf['rcon_port'],
-                    passwd=self.conf['rcon_password'],
-                    timeout=1):
+        while True:
+            try:
+                with Client(
+                        host=self.conf['rcon_host'],
+                        port=self.conf['rcon_port'],
+                        passwd=self.conf['rcon_password'],
+                        timeout=1):
+                    INFO.logger.info("[ RCON ] RCON连接正常")
+                    print("\r[ RCON ] RCON连接正常\n", end='', flush=True)
+                    time.sleep(1)
+                    return True
 
-                INFO.logger.info("[ RCON ] RCON连接正常")
-                print("[ RCON ] RCON连接正常")
-        except TimeoutError:
-            INFO.logger.error("[ RCON ] RCON连接超时,请检查IP和端口是否填写正确")
-            print("[ RCON ] RCON连接超时,请检查IP和端口是否填写正确")
-            time.sleep(2)
-            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
-            exit(0)
-        except rcon.exceptions.WrongPassword:
-            INFO.logger.error("[ RCON ] RCON密码错误,请检查相关设置")
-            print("[ RCON ] RCON密码错误,请检查相关设置")
-            time.sleep(2)
-            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
-            exit(0)
+            except TimeoutError:
+                INFO.logger.error("[ RCON ] 正在检测RCON连接，请不要关闭......")
+                print("[ RCON ] 正在检测RCON连接，请不要关闭......")
+                return False
+            except rcon.exceptions.WrongPassword:
+                INFO.logger.error("[ RCON ] RCON密码错误,请检查相关设置")
+                print("[ RCON ] RCON密码错误,请检查相关设置")
+                time.sleep(2)
+                subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
+                exit(0)
 
     def start_program(self):
         INFO.logger.info("[ 启动任务 ] 正在启动程序......")
@@ -80,15 +81,27 @@ class TaskScheduler:
 
         subprocess.Popen(program_args)
 
+        # 尝试连接
         if self.conf['rcon_enabled']:
             if self.is_first_run:  # 只有在首次运行时才检查RCON连接
                 INFO.logger.info("[ RCON ] 已开启RCON功能")
                 print("[ RCON ] 已开启RCON功能")
-                INFO.logger.info("[ RCON ] 正在检查RCON连接，请等待5秒......")
-                print("[ RCON ] 正在检查RCON连接，请等待5秒......")
-                time.sleep(5)
-                self.check_rcon()
-                self.is_first_run = False  # 首次启动后，将状态标志设置为False
+                INFO.logger.info("[ RCON ] 正在检查RCON连接，请等待最多15秒......")
+                print("[ RCON ] 正在检查RCON连接，请等待最多15秒......")
+
+                start_time = time.time()
+                while time.time() - start_time < 15:
+                    if self.check_rcon():
+                        break
+                    time.sleep(1)  # 每次尝试后，暂停1秒
+
+                if time.time() - start_time >= 15:
+                    INFO.logger.error("[ RCON ] 无法在15秒内建立RCON连接")
+                    print("[ RCON ] 无法在15秒内建立RCON连接")
+                    exit(0)
+
+                self.is_first_run = False
+
         else:
             INFO.logger.info("[ RCON ] 未开启RCON功能")
             print("[ RCON ] 未开启RCON功能")
@@ -111,11 +124,13 @@ class TaskScheduler:
                 self.start_program()
 
             INFO.logger.info(f'[ 轮询任务 ] 服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
-            print(f'[ 轮询任务 ] 服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
+            print(f'\r[ 轮询任务 ] 服务器将进入重启倒计时，设置时长为 {self.conf["restart_interval"]} 秒......')
 
             # 如果设置了检查内存使用情况memory_monitor_enabled
             if self.conf['memory_monitor_enabled']:
-                print("[ 内存监控 ] 已开启内存监控，将在内存使用超过阈值时重启程序......")
+                time.sleep(1)
+                INFO.logger.info(f"[ 内存监控 ] 已开启内存监控，每{self.conf['polling_interval_seconds']}秒检查一次，将在内存使用超过{self.conf['memory_usage_threshold']}%时重启程序")
+                print(f"\r[ 内存监控 ] 已开启内存监控，每{self.conf['polling_interval_seconds']}秒检查一次，将在内存使用超过{self.conf['memory_usage_threshold']}%时重启程序")
 
             # 服务器持续运行时间(重启间隔)
             for i in range(int(self.conf['restart_interval']), 0, -1):
@@ -126,6 +141,7 @@ class TaskScheduler:
                         mem_usage = mem_info.percent  # 获取内存使用百分比
                         # 如果内存使用超过阈值，则跳出倒计时，进行重启操作
                         if mem_usage > self.conf['memory_usage_threshold']:
+                            INFO.logger.error(f"[ 内存监控 ] 内存使用超过{self.conf['memory_usage_threshold']}%，正在重启程序......")
                             print(f"[ 内存监控 ] 内存使用超过{self.conf['memory_usage_threshold']}%，正在重启程序......")
                             break
                     else:
@@ -133,8 +149,6 @@ class TaskScheduler:
                         print("[ 内存监控 ] 轮询间隔 polling_interval_seconds 必须大于5秒，请重新设置！")
                         time.sleep(2)
                         exit(0)
-
-                print(f'\r[ 轮询任务 ] 服务器将在 {i} 秒后重启......', end='')
 
                 # 还剩30秒的时候发送rcon关服消息提醒
                 if str(i) in self.conf['shutdown_notices'] and self.conf['rcon_enabled']:  # 检查是否有对应的通知
@@ -174,10 +188,9 @@ class TaskScheduler:
             self.start_program()
 
     def start_daemon(self):
-        # 守护进程代码
+        # 守护进程
         while True:
             try:
-                # 检查服务是否在运行
                 result = subprocess.run(['tasklist', '/FI', 'IMAGENAME eq PalServer.exe'], capture_output=True,
                                         text=True)
                 if 'PalServer.exe' not in result.stdout:
@@ -187,13 +200,10 @@ class TaskScheduler:
                     # 启动程序
                     self.start_program()
 
-                else:
-                    print("\r\033[K", end='')
-                    print('[ 守护进程 ] 监控到 PalServer 正在运行中,无需任何操作')
-                # 倒数计时
+                # 倒计时
                 for i in range(int(self.conf['daemon_time']), 0, -1):
-                    print("[ 守护进程 ] 将在 {0} 秒后进行下次检测".format(i), end='')
                     time.sleep(1)
+
             # 只有异常退出才会触发，手动关闭进程不会触发
             except Exception as e:
                 INFO.logger.error(f"[ 守护进程 ] 程序异常终止，错误信息：{e}\n正在尝试重启程序......")
@@ -213,11 +223,9 @@ def main():
     # [ 轮询任务 ] 必须在最初启动 防止[ 轮询任务 ] kill掉[ 守护进程 ] 刚启动的服务端
     if Task.conf['daemon_enabled']:
         print("\r\033[K", end='')
-        print("[ 守护进程 ] 已配置,在 5 秒后监控 PalServer 进程")
+        INFO.logger.info("[ 守护进程 ] 守护进程已开启，延迟5秒启动避免双端开启，每隔{0}秒检查一次......".format(Task.conf['daemon_time']))
+        print("[ 守护进程 ] 守护进程已开启，延迟5秒启动避免双端开启，每隔{0}秒检查一次......".format(Task.conf['daemon_time']))
         time.sleep(5)  # 再延迟5秒 避免脚本启动时双开服务端。尽量避免10结尾以免和[ 轮询任务 ] 倒计时同时结束
-        INFO.logger.info("[ 守护进程 ] 已启动,每隔{0}秒检测 PalServer 进程......".format(Task.conf['daemon_time']))
-        print("\r\033[K", end='')
-        print("[ 守护进程 ] 已启动,每隔{0}秒检测 PalServer 进程......".format(Task.conf['daemon_time']))
         daemon_thread = threading.Thread(target=Task.start_daemon)
         daemon_thread.start()
 
