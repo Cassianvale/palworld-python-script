@@ -86,18 +86,18 @@ class TaskScheduler:
             if self.is_first_run:  # 只有在首次运行时才检查RCON连接
                 INFO.logger.info("[ RCON ] 已开启RCON功能")
                 print("[ RCON ] 已开启RCON功能")
-                INFO.logger.info("[ RCON ] 正在检查RCON连接，请等待最多15秒......")
-                print("[ RCON ] 正在检查RCON连接，请等待最多15秒......")
+                INFO.logger.info("[ RCON ] 正在检查RCON连接，请等待最多60秒......")
+                print("[ RCON ] 正在检查RCON连接，请等待最多60秒......")
 
                 start_time = time.time()
-                while time.time() - start_time < 15:
+                while time.time() - start_time < 60:
                     if self.check_rcon():
                         break
                     time.sleep(1)  # 每次尝试后，暂停1秒
 
                 else:
-                    INFO.logger.error("[ RCON ] 无法在15秒内建立RCON连接")
-                    print("[ RCON ] 无法在15秒内建立RCON连接")
+                    INFO.logger.error("[ RCON ] 无法在60秒内建立RCON连接")
+                    print("[ RCON ] 无法在60秒内建立RCON连接")
                     exit(0)
 
                 self.is_first_run = False
