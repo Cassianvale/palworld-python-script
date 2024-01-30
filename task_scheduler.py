@@ -95,7 +95,7 @@ class TaskScheduler:
                         break
                     time.sleep(1)  # 每次尝试后，暂停1秒
 
-                if time.time() - start_time >= 15:
+                else:
                     INFO.logger.error("[ RCON ] 无法在15秒内建立RCON连接")
                     print("[ RCON ] 无法在15秒内建立RCON连接")
                     exit(0)
