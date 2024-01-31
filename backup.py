@@ -5,7 +5,7 @@ import shutil
 import time
 import datetime
 import os
-import read_conf
+from utils import read_conf
 from utils.log_control import INFO
 
 

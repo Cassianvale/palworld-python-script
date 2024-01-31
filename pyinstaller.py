@@ -27,16 +27,16 @@ def package_scripts():
 
     shutil.copy('config.ini', 'dist')
 
-    if os.path.exists('dist/palworld-python-script.zip'):
-        os.remove('dist/palworld-python-script.zip')
+    if os.path.exists('dist/palworld-python-script-v0.1.4.zip'):
+        os.remove('dist/palworld-python-script-v0.1.4.zip')
 
-    if os.path.exists('palworld-python-script.zip'):
-        os.remove('palworld-python-script.zip')
+    if os.path.exists('palworld-python-script-v0.1.4.zip'):
+        os.remove('palworld-python-script-v0.1.4.zip')
 
     shutil.make_archive('palworld-python-script', 'zip', 'dist')
     print("palworld-python-script 打包成功！")
 
-    shutil.move('palworld-python-script.zip', 'dist')
+    shutil.move('palworld-python-script-v0.1.4.zip', 'dist')
     print("打包后的palworld-python-script.zip已放入dist文件夹！")
 
 

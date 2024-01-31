@@ -6,7 +6,7 @@ import subprocess
 import time
 import psutil
 import rcon
-import read_conf
+from utils import read_conf
 import threading
 from utils.log_control import INFO
 from rcon.source import Client
@@ -30,10 +30,6 @@ class TaskScheduler:
         """Patched run method that ignores SessionTimeout exceptions."""
         request = Packet.make_command(command, *args, encoding=encoding)
         response = self.communicate(request)
-
-        # Ignore SessionTimeout exceptions
-        # if response.id != request.id:
-        #     raise SessionTimeout()
 
         return response.payload.decode(encoding)
 
