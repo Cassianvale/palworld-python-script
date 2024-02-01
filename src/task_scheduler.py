@@ -6,9 +6,9 @@ import subprocess
 import time
 import psutil
 import os
-import read_conf
+from src import read_conf
 import threading
-from utils.log_control import INFO
+from src.utils.log_control import INFO
 from rcon.source import Client
 from rcon.source.proto import Packet
 from rcon.exceptions import WrongPassword

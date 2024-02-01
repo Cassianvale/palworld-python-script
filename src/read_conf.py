@@ -10,8 +10,7 @@ import os
 def read_config():
     # 读取配置文件
     config = configparser.ConfigParser()
-    config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-    with codecs.open(config_path, 'r', encoding='utf-8-sig') as f:
+    with codecs.open('config.ini', 'r', encoding='utf-8-sig') as f:
         config.read_file(f)
     main_directory = config.get('Settings', 'main_directory')
     backup_dir = config.get('Settings', 'backup_dir')

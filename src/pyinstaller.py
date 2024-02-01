@@ -25,7 +25,7 @@ def package_scripts():
         os.remove('palworld-python-script.zip')
         print('已删除原palworld-python-script.zip')
 
-    scripts = ['src/task_scheduler.py', 'src/backup.py']
+    scripts = ['task_scheduler.py', 'backup.py']
     print('正在打包:', scripts)
 
     for script in scripts:
@@ -33,7 +33,7 @@ def package_scripts():
         command = 'pyinstaller', '--onefile', script
         subprocess.run(command)
 
-    shutil.copy('src/config.ini', 'dist')
+    shutil.copy('config.ini', 'dist')
 
     shutil.make_archive('palworld-python-script', 'zip', 'dist')
     print("palworld-python-script 打包成功！")
