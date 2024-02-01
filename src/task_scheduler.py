@@ -6,9 +6,9 @@ import subprocess
 import time
 import psutil
 import rcon
-import read_conf
+from src import read_conf
 import threading
-from utils.log_control import INFO
+from src.utils.log_control import INFO
 from rcon.source import Client
 from rcon.source.proto import Packet
 
@@ -79,7 +79,13 @@ class TaskScheduler:
             program_args.extend(["-useperfthreads", "-NoAsyncLoadingThread", "-UseMultithreadForDS"])
         print("[ 启动任务 ] 启动参数：", self.conf['arguments'].split())
 
-        subprocess.Popen(program_args)
+        try:
+            subprocess.Popen(program_args)
+        except FileNotFoundError as e:
+            INFO.logger.error(f"[ 启动任务 ] 请检查config.ini配置路径，错误信息: {e}")
+            print(f"\r[ 启动任务 ] 请检查config.ini配置路径，错误信息: {e}")
+            time.sleep(3)
+            exit(1)
 
         # 尝试连接
         if self.conf['rcon_enabled']:
