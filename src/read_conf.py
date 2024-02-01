@@ -6,6 +6,7 @@ import configparser
 import json
 import os
 
+
 def read_config():
     # 读取配置文件
     config = configparser.ConfigParser()

@@ -84,9 +84,9 @@ class TaskScheduler:
 
         try:
             subprocess.Popen(program_args)
-        except FileNotFoundError as e:
-            INFO.logger.error(f"[ 启动任务 ] 请检查config.ini配置路径，错误信息: {e}")
-            print(f"\r[ 启动任务 ] 请检查config.ini配置路径，错误信息: {e}")
+        except FileNotFoundError:
+            INFO.logger.error(f"[ 启动任务 ] 启动失败，请检查config.ini中main_directory路径配置")
+            print(f"\r[ 启动任务 ] 启动失败，请检查config.ini中main_directory路径配置")
             time.sleep(3)
             exit(1)
 

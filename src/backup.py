@@ -50,9 +50,9 @@ class Backup:
                     for i in range(int(self.conf['backup_interval']), 0, -1):
                         print(f'\r下一次备份将在 {i} 秒后开始...', end='')
                         time.sleep(1)
-            except FileNotFoundError as e:
-                INFO.logger.error(f"备份失败，{e}")
-                print(f"备份失败，{e}")
+            except FileNotFoundError:
+                INFO.logger.error(f"备份失败，请检查config.ini中main_directory路径配置")
+                print(f"\r备份失败，请检查config.ini中main_directory路径配置")
 
         # 备份时间必须大于等于60秒
         elif int(self.conf['backup_interval']) < 60:
