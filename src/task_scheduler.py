@@ -5,18 +5,20 @@
 import subprocess
 import time
 import psutil
-import rcon
-from src import read_conf
+import os
+import read_conf
 import threading
-from src.utils.log_control import INFO
+from utils.log_control import INFO
 from rcon.source import Client
 from rcon.source.proto import Packet
+from rcon.exceptions import WrongPassword
 
 
 class TaskScheduler:
     def __init__(self):
         self.conf = read_conf.read_config()
         self.appName = 'PalServer-Win64-Test-Cmd.exe'
+        self.program_path = os.path.join(self.conf['main_directory'], 'PalServer.exe')
         self.host = self.conf['rcon_host'],
         self.port = self.conf['rcon_port'],
         self.passwd = self.conf['rcon_password'],
@@ -57,7 +59,8 @@ class TaskScheduler:
                     time.sleep(1)
                 else:
                     return False
-            except rcon.exceptions.WrongPassword:
+
+            except WrongPassword:
                 INFO.logger.error("[ RCON ] RCON密码错误,请检查相关设置")
                 print("[ RCON ] RCON密码错误,请检查相关设置")
                 time.sleep(2)
@@ -67,7 +70,7 @@ class TaskScheduler:
     def start_program(self):
         INFO.logger.info("[ 启动任务 ] 正在启动程序......")
         print("[ 启动任务 ] 正在启动程序......")
-        program_args = [self.conf['program_path']]
+        program_args = self.program_path
 
         if self.conf['arguments']:
             INFO.logger.info("[ 启动任务 ] 已配置额外参数")
