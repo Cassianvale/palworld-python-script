@@ -5,8 +5,8 @@ import shutil
 import time
 import datetime
 import os
-import read_conf
-from utils.log_control import INFO
+from src import read_conf
+from src.utils.log_control import INFO
 
 
 class Backup:

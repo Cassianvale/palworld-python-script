@@ -18,20 +18,22 @@ def remove_ds_store(dir):
 
 def package_scripts():
 
-    scripts = ['task_scheduler.py', 'backup.py']
-
-    for script in scripts:
-        print('打包', scripts)
-        command = ['pyinstaller', '--onefile', script]
-        subprocess.run(command)
-
-    shutil.copy('config.ini', 'dist')
-
     if os.path.exists('dist/palworld-python-script.zip'):
         os.remove('dist/palworld-python-script.zip')
-
+        print('已删除原dist/palworld-python-script.zip')
     if os.path.exists('palworld-python-script.zip'):
         os.remove('palworld-python-script.zip')
+        print('已删除原palworld-python-script.zip')
+
+    scripts = ['src/task_scheduler.py', 'src/backup.py']
+    print('正在打包:', scripts)
+
+    for script in scripts:
+
+        command = 'pyinstaller', '--onefile', script
+        subprocess.run(command)
+
+    shutil.copy('src/config.ini', 'dist')
 
     shutil.make_archive('palworld-python-script', 'zip', 'dist')
     print("palworld-python-script 打包成功！")

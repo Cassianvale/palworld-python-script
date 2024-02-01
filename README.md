@@ -24,7 +24,7 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 https://github.com/Cassianvale/palworld-python-script/releases  
 2.有两个exe程序，一个是`task_scheduler.exe`轮询重启守护进程等，一个是`backup.exe`独立的定时备份存档，必须与`config.ini`配置文件放在同一目录下运行  
 3.修改`config.ini`配置文件，配置文件中有详细的说明  
-![img.png](img.png)
+![img.png](data/img.png)
 
 ## 二次开发  
 
