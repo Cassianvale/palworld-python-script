@@ -6,7 +6,6 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 
 ## 特别鸣谢  
 https://github.com/VeroFess/PalWorld-Server-Unoffical-Api  
-https://github.com/Hoshinonyaruko/PalWorld-Server-Unoffical-Api
 本项目使用了VeroFess大佬的dll注入，得以使用RCON发送中文消息，感谢VeroFess的无私分享  
 
 ## 主要功能  
