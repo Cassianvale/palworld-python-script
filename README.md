@@ -6,6 +6,7 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 
 ## 特别鸣谢  
 https://github.com/VeroFess/PalWorld-Server-Unoffical-Api  
+https://github.com/Hoshinonyaruko/PalWorld-Server-Unoffical-Api
 本项目使用了VeroFess大佬的dll注入，得以使用RCON发送中文消息，感谢VeroFess的无私分享  
 
 ## 主要功能  
@@ -13,15 +14,16 @@ https://github.com/VeroFess/PalWorld-Server-Unoffical-Api
 1.轮询任务重启服务端  
 2.重启服务端前通过RCON指令发送关服倒计时  
 3.自定义存档备份时间  
+4.自定义轮询发送RCON中文公告  
 
 ## 开发计划  
 
 - [x] 增加自定义启动参数  
-- [x] 自定义关服倒计时通知内容(暂时无法发送中文)  
+- [x] 自定义关服倒计时通知内容  
 - [x] 增加守护进程  
 - [x] rcon-cli客户端转为第三方rcon库  
-- [x] 内存使用百分比检测
-- [x] 内存到达阈值重启倒计时通知
+- [x] 内存使用百分比检测  
+- [x] 内存到达阈值重启倒计时通知  
 
 ## 使用说明  
 

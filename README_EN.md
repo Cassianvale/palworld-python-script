@@ -13,15 +13,16 @@ This project uses the DLL injection provided by VeroFess, which allows us to sen
 1. Polling task to restart the server  
 2. Send shutdown countdown via RCON commands before server restart  
 3. Customize the backup time of the archive  
-
+4. Custom Polling for Sending Chinese RCON Announcements  
+5. 
 ## Development Plan  
 
-- [x] Added custom startup parameters
-- [x] Customized shutdown countdown notification content (currently unable to send in Chinese)
-- [x] Added daemon process
-- [x] Switched rcon-cli client to third-party rcon library
-- [x] Memory usage percentage detection
-- [x] Countdown notification for restart when memory reaches threshold
+- [x] Added custom startup parameters  
+- [x] Customized shutdown countdown notification content  
+- [x] Added daemon process  
+- [x] Switched rcon-cli client to third-party rcon library  
+- [x] Memory usage percentage detection  
+- [x] Countdown notification for restart when memory reaches threshold  
 
 ## Instructions for Use  
  
