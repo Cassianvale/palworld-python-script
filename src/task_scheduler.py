@@ -49,6 +49,9 @@ class TaskScheduler:
         self.is_first_run = True
         self.is_restarting = False
         self.current_announcement_index = 0
+        self.script_dir = os.path.dirname(sys.argv[0])
+        self.zip_file_path = os.path.join(self.script_dir, "UE4SS-PalServerInject.zip") # TODO 联网获取
+        self.files_to_override = ["pal-plugin-loader.dll", "PalServerInject.exe", "UE4SS.dll", "palinject_version.txt"]
 
     # 修改rcon源代码，忽略SessionTimeout异常
     def patched_run(self, command: str, *args: str, encoding: str = "utf-8") -> str:
@@ -99,63 +102,43 @@ class TaskScheduler:
                 pass
         return False
 
+    # 解压文件
+    def unzip_files(self):
+        try:
+            with zipfile.ZipFile(self.zip_file_path, 'r') as zip_ref:
+                for member in zip_ref.namelist():
+                    target_path = os.path.join(self.palinject_dir, member)
+                    # 如果文件在 files_to_override 列表中，则直接覆盖
+                    if any(member.endswith(pf) for pf in self.files_to_override):
+                        zip_ref.extract(member, self.palinject_dir)
+                    else:
+                        if not os.path.exists(target_path):
+                            zip_ref.extract(member, self.palinject_dir)
+            time.sleep(5)
+            settings_file_path = os.path.join(self.palinject_dir, "UE4SS-settings.ini")
+            self.modify_ue4ss_settings(settings_file_path)
+            INFO.logger.info("[ 解压更新 ] 解压操作完成")
+            print("[ 解压更新 ] 解压操作完成")
+        except Exception as e:
+            INFO.logger.error(f"[ 解压更新 ] 解压操作失败: {str(e)}")
+            print(f"[ 解压更新 ] 解压操作失败: {str(e)}")
+
+    # 简化解压逻辑
     def check_and_extract(self):
-        palinject_dir = os.path.join(self.main_dir, "Pal\\Binaries\\Win64")
-        files_to_override = ["pal-plugin-loader.dll", "PalServerInject.exe", "UE4SS.dll"]
-        items_to_check = [
-        "pal-plugin-loader.dll",
-        "PalServerInject.exe",
-        "UE4SS.dll",
-        "UE4SS-settings.ini",
-        "Mods",
-        "UE4SS_Signatures"
-        ]
-
-        missing_items = []
-        for item in items_to_check:
-            item_path = os.path.join(palinject_dir, item)
-            if os.path.isdir(item_path) or os.path.isfile(item_path):
-                continue  # 如果路径是文件夹或文件，则存在
-            else:
-                missing_items.append(item)
-        if missing_items:
-            missing_items_str = ", ".join(missing_items)
-            INFO.logger.warning(f"[ 启动检测 ] 未找到: {missing_items_str}")
-            print(f"[ 启动检测 ] 未找到: {missing_items_str}")
-        else:
-            INFO.logger.info("[ 启动检测 ] 文件已安装，无需解压操作")
-            print("[ 启动检测 ] 文件已安装，无需解压操作")
-
-        # 检查文件和文件夹是否存在
-        files_exist = all(
-            os.path.isdir(os.path.join(palinject_dir, item)) if item in ["Mods", "UE4SS_Signatures"]
-            else os.path.isfile(os.path.join(palinject_dir, item))
-            for item in items_to_check
-        )
-        if not files_exist:
-            INFO.logger.info(f"[ 启动检测 ] 插件未安装，准备解压")
-            print(f"[ 启动检测 ] 插件未安装，准备解压")
-            script_dir = os.path.dirname(sys.argv[0])
-            zip_file_path = os.path.join(script_dir, "UE4SS-PalServerInject.zip")
-            try:
-                with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-                    for member in zip_ref.namelist():
-                        target_path = os.path.join(palinject_dir, member)
-                        # 如果文件在files_to_override列表中，则直接覆盖
-                        if any(member.endswith(pf) for pf in files_to_override):
-                            zip_ref.extract(member, palinject_dir)
-                        else:
-                            if not os.path.exists(target_path):
-                                zip_ref.extract(member, palinject_dir)
-                time.sleep(5)
-                settings_file_path = os.path.join(palinject_dir, "UE4SS-settings.ini")
-                self.modify_ue4ss_settings(settings_file_path)
-                INFO.logger.info("[ 启动检测 ] 解压操作完成")
-                print("[ 启动检测 ] 解压操作完成")
-            except Exception as e:
-                INFO.logger.error(f"[ 启动检测 ] 解压操作失败: {str(e)}")
-                print(f"[ 启动检测 ] 解压操作失败: {str(e)}")
-
+        palinject_version_file_path = os.path.join(self.palinject_dir, "palinject_version.txt")
+        # 获取版本号,暂定默认跟随PALWORLD官方更新版本号
+        with zipfile.ZipFile(self.zip_file_path, 'r') as zip_ref:     # TODO 联网获取
+            with zip_ref.open("palinject_version.txt") as f:
+                zip_palplugin_version = f.readline().decode('utf-8').strip()
+        # 检查palinject_version.txt
+        if os.path.isfile(palinject_version_file_path):
+            with open(palinject_version_file_path, 'r', encoding='utf-8') as f:
+                installed_palplugin_version = f.readline().strip()
+            if installed_palplugin_version >= zip_palplugin_version :
+                print(f"[ 启动检测 ] 当前插件版本{installed_palplugin_version}，无需解压")
+                return
+        print(f"[ 启动检测 ] 当前插件版本{zip_palplugin_version}，\n准备进行解压")
+        self.unzip_files()
 
     # 修改 UE4SS-settings 防止有人默认不是dx11
     # 解压文件覆盖虽然一劳永逸 但是会影响已存在的配置
