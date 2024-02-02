@@ -2,10 +2,13 @@
 # -*- encoding: utf-8 -*-
 
 
+import codecs
 import os
 import subprocess
+import sys
 import threading
 import time
+import zipfile
 
 import psutil
 import urllib.request
@@ -22,7 +25,9 @@ class TaskScheduler:
     def __init__(self):
         self.conf = read_conf.read_config()
         self.appName = 'PalServer-Win64-Test-Cmd.exe'
-        self.program_path = os.path.join(self.conf['main_directory'], 'PalServer.exe')
+        self.main_dir = self.conf['main_directory']
+        self.palinject_dir = os.path.join(self.main_dir, "Pal\\Binaries\\Win64")
+        self.program_path = os.path.join(self.main_dir, 'PalServer.exe')
         self.rcon_enabled = self.conf['rcon_enabled']
         self.host = self.conf['rcon_host']
         self.port = self.conf['rcon_port']
@@ -86,13 +91,99 @@ class TaskScheduler:
     # 进程检查
     # 改为通过识别 PalServer-Win64-Test-Cmd.exe 来判断服务端是否在运行，注入模式没有 PalServer.exe 进程
     def is_palserver_running(self):
-        for proc in psutil.process_iter():
+        for proc in psutil.process_iter(['name']):
             try:
-                if self.appName.lower() in proc.name().lower():
+                if self.appName.lower() in proc.info['name'].lower():
                     return True
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
         return False
+
+    def check_and_extract(self):
+        palinject_dir = os.path.join(self.main_dir, "Pal\\Binaries\\Win64")
+        files_to_override = ["pal-plugin-loader.dll", "PalServerInject.exe", "UE4SS.dll"]
+        items_to_check = [
+        "pal-plugin-loader.dll",
+        "PalServerInject.exe",
+        "UE4SS.dll",
+        "UE4SS-settings.ini",
+        "Mods",
+        "UE4SS_Signatures"
+        ]
+
+        missing_items = []
+        for item in items_to_check:
+            item_path = os.path.join(palinject_dir, item)
+            if os.path.isdir(item_path) or os.path.isfile(item_path):
+                continue  # 如果路径是文件夹或文件，则存在
+            else:
+                missing_items.append(item)
+        if missing_items:
+            missing_items_str = ", ".join(missing_items)
+            INFO.logger.warning(f"[ 启动检测 ] 未找到: {missing_items_str}")
+            print(f"[ 启动检测 ] 未找到: {missing_items_str}")
+        else:
+            INFO.logger.info("[ 启动检测 ] 文件已安装，无需解压操作")
+            print("[ 启动检测 ] 文件已安装，无需解压操作")
+
+        # 检查文件和文件夹是否存在
+        files_exist = all(
+            os.path.isdir(os.path.join(palinject_dir, item)) if item in ["Mods", "UE4SS_Signatures"]
+            else os.path.isfile(os.path.join(palinject_dir, item))
+            for item in items_to_check
+        )
+        if not files_exist:
+            INFO.logger.info(f"[ 启动检测 ] 插件未安装，准备解压")
+            print(f"[ 启动检测 ] 插件未安装，准备解压")
+            script_dir = os.path.dirname(sys.argv[0])
+            zip_file_path = os.path.join(script_dir, "UE4SS-PalServerInject.zip")
+            try:
+                with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+                    for member in zip_ref.namelist():
+                        target_path = os.path.join(palinject_dir, member)
+                        # 如果文件在files_to_override列表中，则直接覆盖
+                        if any(member.endswith(pf) for pf in files_to_override):
+                            zip_ref.extract(member, palinject_dir)
+                        else:
+                            if not os.path.exists(target_path):
+                                zip_ref.extract(member, palinject_dir)
+                time.sleep(5)
+                settings_file_path = os.path.join(palinject_dir, "UE4SS-settings.ini")
+                self.modify_ue4ss_settings(settings_file_path)
+                INFO.logger.info("[ 启动检测 ] 解压操作完成")
+                print("[ 启动检测 ] 解压操作完成")
+            except Exception as e:
+                INFO.logger.error(f"[ 启动检测 ] 解压操作失败: {str(e)}")
+                print(f"[ 启动检测 ] 解压操作失败: {str(e)}")
+
+
+    # 修改 UE4SS-settings 防止有人默认不是dx11
+    # 解压文件覆盖虽然一劳永逸 但是会影响已存在的配置
+    def modify_ue4ss_settings(self, settings_file_path):
+        lines = []
+        section_found = False
+        key_found = False
+
+        with codecs.open(settings_file_path, 'r', encoding='utf-8-sig') as f:
+            lines = f.readlines()
+
+        for i, line in enumerate(lines):
+            if '[Debug]' in line:
+                section_found = True
+            elif section_found and 'GraphicsAPI' in line:
+                lines[i] = 'GraphicsAPI = dx11\n'
+                key_found = True
+                break
+
+        if section_found and key_found:
+            with codecs.open(settings_file_path, 'w', encoding='utf-8-sig') as f:
+                f.writelines(lines)
+
+            INFO.logger.info("[ 配置更新 ] GraphicsAPI 设置为 dx11")
+            print("[ 配置更新 ] GraphicsAPI 设置为 dx11")
+        else:
+            INFO.logger.error("[ 配置错误 ] 无法找到 Debug 或 GraphicsAPI ")
+            print("[ 配置错误 ] 无法找到 Debug 或 GraphicsAPI ")
 
     # 定时公告
     def send_notice(self):
@@ -143,7 +234,7 @@ class TaskScheduler:
         print("[ 启动任务 ] 正在启动程序......")
 
         if self.palinject_enabled:
-            program_args = [os.path.join(self.conf['main_directory'], "Pal\\Binaries\\Win64\\PalServerInject.exe")]
+            program_args = [os.path.join(self.palinject_dir, "PalServerInject.exe")]
         else:
             program_args = [self.program_path]
 
@@ -167,37 +258,39 @@ class TaskScheduler:
             exit(1)
 
         # 尝试连接
-        if self.rcon_enabled:
-            if self.is_first_run:  # 只有在首次运行时才检查RCON连接
-                INFO.logger.info("[ RCON ] 已开启RCON功能")
-                print("[ RCON ] 已开启RCON功能")
-                INFO.logger.info("[ RCON ] 正在检查RCON连接，请等待最多60秒......")
-                print("[ RCON ] 正在检查RCON连接，请等待最多60秒......")
+        if not self.palinject_enabled:
+            if self.rcon_enabled:
+                if self.is_first_run:  # 只有在首次运行时才检查RCON连接
+                    INFO.logger.info("[ RCON ] 已开启RCON功能")
+                    print("[ RCON ] 已开启RCON功能")
+                    INFO.logger.info("[ RCON ] 正在检查RCON连接，请等待最多60秒......")
+                    print("[ RCON ] 正在检查RCON连接，请等待最多60秒......")
 
-                start_time = time.time()
-                while time.time() - start_time < 60:
-                    if self.check_rcon():
-                        break
-                    time.sleep(1)
+                    start_time = time.time()
+                    while time.time() - start_time < 60:
+                        if self.check_rcon():
+                            break
+                        time.sleep(1)
 
-                else:
-                    INFO.logger.error("[ RCON ] 无法在60秒内建立RCON连接")
-                    print("[ RCON ] 无法在60秒内建立RCON连接")
-                    exit(0)
+                    else:
+                        INFO.logger.error("[ RCON ] 无法在60秒内建立RCON连接")
+                        print("[ RCON ] 无法在60秒内建立RCON连接")
+                        exit(0)
 
-                self.is_first_run = False
+                    self.is_first_run = False
 
-        else:
-            INFO.logger.info("[ RCON ] 未开启RCON功能")
-            print("[ RCON ] 未开启RCON功能")
+            else:
+                INFO.logger.info("[ RCON ] 未开启RCON功能")
+                print("[ RCON ] 未开启RCON功能")
 
 
     # 轮询任务(固定延迟执行)
     def polling_task(self):
         while True:
-            if self.restart_interval < 60:
-                INFO.logger.error("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于等于1分钟，请重新设置！")
-                print("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于等于1分钟，请重新设置！")
+            # 经测试等于1分钟时原版RCON会出现timeout
+            if self.restart_interval <= 60:
+                INFO.logger.error("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于1分钟，请重新设置！")
+                print("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于1分钟，请重新设置！")
                 time.sleep(2)
                 exit(0)
 
@@ -360,6 +453,11 @@ class TaskScheduler:
 def main():
     Task = TaskScheduler()
 
+    if Task.conf['palinject_enabled']:
+        INFO.logger.info("[ 启动检测 ] 检测已开启注入模式")
+        print("[ 启动检测 ] 检测已开启注入模式")
+        Task.check_and_extract()
+
     polling_thread = threading.Thread(target=Task.polling_task)
     INFO.logger.info("[ 轮询任务 ] 已启动,每隔{0}秒重启 PalServer 进程......".format(Task.conf['restart_interval']))
     print("[ 轮询任务 ] 已启动,每隔{0}秒重启 PalServer 进程......".format(Task.conf['restart_interval']))
@@ -386,9 +484,9 @@ def main():
     if Task.conf['palinject_enabled'] and Task.conf['announcement_enabled']:
         INFO.logger.info("[ 定时公告 ] 已启动,每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
         print("[ 定时公告 ] 已启动,每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
-        # 开始发送公告任务
-        time.sleep(20)
-        Task.send_notice()
+
+        time.sleep(30)
+        Task.send_notice()  # 公告
 
     polling_thread.join()
     if Task.conf['daemon_enabled']:
