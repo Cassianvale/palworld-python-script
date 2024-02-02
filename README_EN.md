@@ -30,7 +30,7 @@ This project uses the DLL injection provided by VeroFess, which allows us to sen
 https://github.com/Cassianvale/palworld-python-script/releases  
 2. There are two exe programs, one is `task_scheduler.exe` for polling, restarting daemon processes, etc., and the other is `backup.exe` for independent timed backup of archives. Both must be run in the same directory as the `config.ini` configuration file.  
 3. Modify the `config.ini` configuration file. Detailed instructions are provided in the configuration file.  
-![img.png](data/img.png)
+![img-01.png](data/img-01.png)
 
 ## Usage  
 
