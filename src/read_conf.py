@@ -15,6 +15,7 @@ def read_config():
     main_directory = config.get('Settings', 'main_directory')
     backup_dir = config.get('Settings', 'backup_dir')
     arguments = config.get('Settings', 'arguments')
+    palinject_enabled = config.getboolean('Settings', 'PalInject_enabled')
     use_multicore_options = config.getboolean('Settings', 'use_multicore_options')
     backup_interval_hours = config.getint('Settings', 'backup_interval_hours')
     backup_interval_minutes = config.getint('Settings', 'backup_interval_minutes')
@@ -26,12 +27,26 @@ def read_config():
     polling_interval_seconds = config.getint('Memory', 'polling_interval_seconds')
     memory_usage_threshold = config.getint('Memory', 'memory_usage_threshold')
     shutdown_notices = dict(item.split(':') for item in config.get('RCON', 'shutdown_notices').split(';'))
+    shutdown_notices_cn = dict(item.split(':') for item in config.get('RCON', 'shutdown_notices_cn').split(';'))
     rcon_enabled = config.getboolean('RCON', 'rcon_enabled')
     rcon_host = config.get('RCON', 'HOST')
     rcon_port = config.getint('RCON', 'PORT')
     rcon_password = config.get('RCON', 'AdminPassword')
     rcon_command = config.get('RCON', 'COMMAND')
 
+    announcement_enabled = config.getboolean('Messages', 'announcement_enabled')
+    announcement_time = config.getint('Messages', 'announcement_time')
+
+    # 获取公告消息
+    announcement_messages = []
+    for i in range(1, 11):  # 10个公告消息
+        key = f'announcement_messages_{i}'
+        if config.has_option('Messages', key):
+            message = config.get('Messages', key)
+            announcement_messages.append(message)
+        else:
+            break
+        
     # 将小时和分钟转换为秒
     restart_interval = (restart_interval_hours * 60 + restart_interval_minutes) * 60
     backup_interval = (backup_interval_hours * 60 + backup_interval_minutes) * 60
@@ -40,6 +55,7 @@ def read_config():
         'main_directory': main_directory,
         'backup_dir': backup_dir,
         'arguments': arguments,
+        'palinject_enabled': palinject_enabled,
         'use_multicore_options': use_multicore_options,
         'rcon_enabled': rcon_enabled,
         'rcon_host': rcon_host,
@@ -49,11 +65,15 @@ def read_config():
         'backup_interval': backup_interval,
         'restart_interval': restart_interval,
         'shutdown_notices': shutdown_notices,
+        'shutdown_notices_cn': shutdown_notices_cn,
         'daemon_enabled': daemon_enabled,
         'daemon_time': daemon_time,
         'memory_monitor_enabled': memory_monitor_enabled,
         'polling_interval_seconds': polling_interval_seconds,
         'memory_usage_threshold': memory_usage_threshold,
+        'announcement_enabled': announcement_enabled,
+        'announcement_time': announcement_time,
+        'announcement_messages': announcement_messages,
     }
 
 
