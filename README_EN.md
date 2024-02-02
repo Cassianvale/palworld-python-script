@@ -12,11 +12,12 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 
 ## Development Plan  
 
-- [x] Added custom startup parameters for multi-core  
-- [x] Customized shutdown notifications  
-- [x] Added daemon process  
-- [x] Converted rcon-cli client to third-party rcon library  
-- [x] Memory usage percentage check  
+- [x] Added custom startup parameters
+- [x] Customized shutdown countdown notification content (currently unable to send in Chinese)
+- [x] Added daemon process
+- [x] Switched rcon-cli client to third-party rcon library
+- [x] Memory usage percentage detection
+- [x] Countdown notification for restart when memory reaches threshold
 
 ## Instructions for Use  
  
