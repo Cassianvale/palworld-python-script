@@ -4,6 +4,10 @@ _✨ Suitable for palworld windows polling auto-restart server and auto-send shu
 
 [简体中文](./README.md) / English  
 
+## Special Thanks  
+https://github.com/VeroFess/PalWorld-Server-Unoffical-Api  
+This project uses the DLL injection provided by VeroFess, which allows us to send Chinese messages via RCON. We appreciate VeroFess's selfless sharing.  
+
 ## Main Features  
 
 1. Polling task to restart the server  

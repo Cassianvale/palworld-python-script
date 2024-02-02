@@ -4,6 +4,10 @@ _✨ 适用于palworld windows轮询自动重启服务端自动发送关服通�
 
 简体中文 / [English](./README_EN.md)  
 
+## 特别鸣谢  
+https://github.com/VeroFess/PalWorld-Server-Unoffical-Api  
+本项目使用了VeroFess大佬的dll注入，得以使用RCON发送中文消息，感谢VeroFess的无私分享  
+
 ## 主要功能  
 
 1.轮询任务重启服务端  
@@ -37,6 +41,3 @@ https://github.com/Cassianvale/palworld-python-script/releases
 具体使用请参考飞书文档  
 https://cxqzok4p36.feishu.cn/docx/YxPtdYoqCo5PdfxSyNgcDfIwnwe  
 
-## 感谢  
-rcon  
-https://github.com/conqp/rcon  
