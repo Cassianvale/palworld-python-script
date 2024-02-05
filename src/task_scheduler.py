@@ -64,14 +64,18 @@ class TaskScheduler:
     # Apply the monkey patch
     Client.run = patched_run
 
+    def connect_rcon(self):
+        return Client(
+            host=self.host,
+            port=self.port,
+            passwd=self.passwd,
+            timeout=1
+        )
+
     def check_rcon(self):
         while True:
             try:
-                with Client(
-                        host=self.host,
-                        port=self.port,
-                        passwd=self.passwd,
-                        timeout=1):
+                with self.connect_rcon():
                     INFO.logger.info("[ RCON ] RCON连接正常")
                     print("\r[ RCON ] RCON连接正常\n", end='', flush=True)
                     time.sleep(1)
@@ -85,8 +89,8 @@ class TaskScheduler:
                 else:
                     return False
             except WrongPassword:
-                INFO.logger.error("[ RCON ] RCON密码错误,请检查相关设置")
-                print("[ RCON ] RCON密码错误,请检查相关设置")
+                INFO.logger.error("[ RCON ] RCON密码错误，请检查相关设置")
+                print("[ RCON ] RCON密码错误，请检查相关设置")
                 time.sleep(2)
                 subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
                 exit(0)
@@ -310,6 +314,13 @@ class TaskScheduler:
                             for j in range(max_notice_time, 0, -1):
                                 time.sleep(1)
                                 self.send_shutdown_notice(j)
+                            # 关服之前执行一次SAVE
+                            if self.rcon_enabled:
+                                with self.connect_rcon() as client:
+                                    response = client.run("Save")
+                                    INFO.logger.info('[ RCON ] 存档已保存 {0}'.format(response))
+                                    print('\r[ RCON ] 存档已保存', response)
+                                    time.sleep(3)
                             subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
                             self.is_first_run = True
                             time.sleep(5)
@@ -323,38 +334,15 @@ class TaskScheduler:
                         exit(0)
 
                 # 还剩 x 秒的时候发送rcon关服消息提醒
-                if self.palinject_enabled:
-                    if str(i) in self.shutdown_notice_cn:
-                        message = self.shutdown_notice_cn[str(i)]
-                        # api似乎只支持broadcast
-                        command = f"broadcast {message}"
-                        base = "http://127.0.0.1:53000/rcon?text="
-                        messageText = urllib.parse.quote(command)
-                        request_URL = base + messageText
+                self.send_shutdown_notice(i)
 
-                        # 发送HTTP请求
-                        try:
-                            resp = urllib.request.urlopen(request_URL)
-                            if resp.status == 200:
-                                INFO.logger.info('[ 重启通知 ] {0}'.format(resp.read().decode('utf-8')))
-                            else:
-                                INFO.logger.error('[ 请求错误 ] HTTP状态码: {0}'.format(resp.status))
-                                print('\r[ 请求错误 ] HTTP状态码:', resp.status)
-                        except urllib.error.URLError as e:
-                            INFO.logger.error('[ 请求错误 ] {0}'.format(e))
-                            print('\r[ 请求错误 ]', e)
-                else:
-                    if self.rcon_enabled and self.rcon_command and str(i) in self.shutdown_notice:
-                        message = self.shutdown_notice[str(i)]
-                        with Client(
-                                host=self.host,
-                                port=self.port,
-                                passwd=self.passwd,
-                                timeout=1) as client:
-
-                            response = client.run(f"{self.rcon_command} {message}", 'utf-8')
-                            INFO.logger.info('[ 指令发送 ] {0}'.format(response))
-                            print('\r[ 指令发送 ]', response)
+            # 关服之前执行一次SAVE
+            if self.rcon_enabled:
+                with self.connect_rcon() as client:
+                    response = client.run("Save")
+                    INFO.logger.info('[ RCON ] 存档已保存 {0}'.format(response))
+                    print('\r[ RCON ] 存档已保存', response)
+                    time.sleep(3)
 
             # 关闭服务端
             INFO.logger.info("[ 轮询任务 ] 正在关闭任何在运行的 PalServer 服务......")
@@ -423,11 +411,7 @@ class TaskScheduler:
         else:
             if self.rcon_enabled and self.rcon_command and countdown_str in self.shutdown_notice:
                 message = self.shutdown_notice[countdown_str]
-                with Client(
-                        host=self.host,
-                        port=self.port,
-                        passwd=self.passwd,
-                        timeout=1) as client:
+                with self.connect_rcon() as client:
                     response = client.run(f"{self.rcon_command} {message}", 'utf-8')
                     INFO.logger.info('[ 指令发送 ] {0}'.format(response))
                     print('\r[ 指令发送 ]', response)
@@ -442,8 +426,8 @@ def main():
         Task.check_and_extract()
 
     polling_thread = threading.Thread(target=Task.polling_task)
-    INFO.logger.info("[ 轮询任务 ] 已启动,每隔{0}秒重启 PalServer 进程......".format(Task.conf['restart_interval']))
-    print("[ 轮询任务 ] 已启动,每隔{0}秒重启 PalServer 进程......".format(Task.conf['restart_interval']))
+    INFO.logger.info("[ 轮询任务 ] 已启动，每隔{0}秒重启 PalServer 进程......".format(Task.conf['restart_interval']))
+    print("[ 轮询任务 ] 已启动，每隔{0}秒重启 PalServer 进程......".format(Task.conf['restart_interval']))
     polling_thread.start()
     time.sleep(1)
 
@@ -464,12 +448,18 @@ def main():
         print("[ 内存监控 ] 已开启内存监控，每{0}秒检查一次，将在内存使用超过{1}%时重启程序".format(
             Task.conf['polling_interval_seconds'], Task.conf['memory_usage_threshold']))
 
-    if Task.conf['palinject_enabled'] and Task.conf['announcement_enabled']:
-        INFO.logger.info("[ 定时公告 ] 已启动,每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
-        print("[ 定时公告 ] 已启动,每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
-
-        time.sleep(30)
-        Task.send_notice()  # 公告
+    if Task.conf['palinject_enabled']:
+        if Task.conf['announcement_enabled']:
+            INFO.logger.info("[ 定时公告 ] 已启动，每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
+            print("[ 定时公告 ] 已启动，每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
+            time.sleep(30)
+            Task.send_notice()  # 公告
+        else:
+            INFO.logger.info("[ 定时公告 ] 未启动，announcement_enabled开关为False")
+            print("[ 定时公告 ] 未启动，announcement_enabled开关为False")
+    else:
+        INFO.logger.info("[ 定时公告 ] 未启动，palinject_enabled开关为False")
+        print("[ 定时公告 ] 未启动，palinject_enabled开关为False")
 
     polling_thread.join()
     if Task.conf['daemon_enabled']:
