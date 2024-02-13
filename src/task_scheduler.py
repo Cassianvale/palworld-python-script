@@ -4,6 +4,7 @@
 
 import codecs
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -26,8 +27,11 @@ class TaskScheduler:
         self.conf = read_conf.read_config()
         self.appName = 'PalServer-Win64-Test-Cmd.exe'
         self.main_dir = self.conf['main_directory']
-        self.palinject_dir = os.path.join(self.main_dir, "Pal\\Binaries\\Win64")
+        self.palworldsetting_dir = os.path.join(self.main_dir, 'Pal\\Saved\\Config\\WindowsServer')
         self.program_path = os.path.join(self.main_dir, 'PalServer.exe')
+        self.palinject_dir = os.path.join(self.main_dir, 'Pal\\Binaries\\Win64')
+        self.palinject_path = os.path.join(self.palinject_dir, 'PalServerInject.exe')
+        self.appName_path = os.path.join(self.palinject_dir, 'PalServer-Win64-Test-Cmd.exe')
         self.rcon_enabled = self.conf['rcon_enabled']
         self.host = self.conf['rcon_host']
         self.port = self.conf['rcon_port']
@@ -50,7 +54,7 @@ class TaskScheduler:
         self.is_restarting = False
         self.current_announcement_index = 0
         self.script_dir = os.path.dirname(sys.argv[0])
-        self.zip_file_path = os.path.join(self.script_dir, "UE4SS-PalServerInject.zip") # TODO 联网获取
+        self.zip_file_path = os.path.join(self.script_dir, "UE4SS-PalServerInject.zip")
         self.files_to_override = ["pal-plugin-loader.dll", "PalServerInject.exe", "UE4SS.dll", "palinject_version.txt"]
 
     # 修改rcon源代码，忽略SessionTimeout异常
@@ -64,18 +68,31 @@ class TaskScheduler:
     # Apply the monkey patch
     Client.run = patched_run
 
-    def connect_rcon(self):
-        return Client(
-            host=self.host,
-            port=self.port,
-            passwd=self.passwd,
-            timeout=1
-        )
+    def send_rcon_command(self, command):
+        try:
+            with Client(
+                host=self.host,
+                port=self.port,
+                passwd=self.passwd,
+                timeout=1) as client:
+                response = client.run(command)
+            return True, response
+
+        except TimeoutError:
+            return False, "连接超时，请检查服务端"
+        except ConnectionResetError:
+            return False, "远程主机强迫关闭了一个现有的连接，请重连RCON"
+        except:
+            return False, "未知错误"
 
     def check_rcon(self):
         while True:
             try:
-                with self.connect_rcon():
+                with Client(
+                        host=self.host,
+                        port=self.port,
+                        passwd=self.passwd,
+                        timeout=1):
                     INFO.logger.info("[ RCON ] RCON连接正常")
                     print("\r[ RCON ] RCON连接正常\n", end='', flush=True)
                     time.sleep(1)
@@ -92,19 +109,59 @@ class TaskScheduler:
                 INFO.logger.error("[ RCON ] RCON密码错误，请检查相关设置")
                 print("[ RCON ] RCON密码错误，请检查相关设置")
                 time.sleep(2)
-                subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
-                exit(0)
+                self.close_process()
+                sys.exit(0)
 
-    # 进程检查
-    # 改为通过识别 PalServer-Win64-Test-Cmd.exe 来判断服务端是否在运行，注入模式没有 PalServer.exe 进程
+    # 读取PalWorldSettings.ini中的ServerName
+    def read_server_name(self):
+        settings_file_path = os.path.join(self.palworldsetting_dir, 'PalWorldSettings.ini')
+        server_name = "PalServer"  # 默认标题
+        try:
+            with open(settings_file_path, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if 'ServerName=' in line:
+                        # 使用正则表达式匹配 ServerName 后的内容，直到遇到双引号为止
+                        match = re.search(r'ServerName="([^"]*)"', line)
+                        if match:
+                            server_name = match.group(1)  # 提取 ServerName
+                        break
+        except FileNotFoundError:
+            INFO.logger.error(f"[ 配置读取 ] 找不到文件 {settings_file_path}")
+            print(f"[ 配置读取 ] 找不到文件 {settings_file_path}")
+        except Exception as e:
+            INFO.logger.error(f"[ 配置读取 ] 读取 ServerName 出错: {e}")
+            print(f"[ 配置读取 ] 读取 ServerName 出错: {e}")
+        return server_name
+
+    # 进程检查并判断路径
     def is_palserver_running(self):
-        for proc in psutil.process_iter(['name']):
+        INFO.logger.info("[ 配置读取 ] 当前配置文件指定路径为" + self.appName_path)
+        matching_processes = []
+        for proc in psutil.process_iter(['name', 'exe']):
             try:
                 if self.appName.lower() in proc.info['name'].lower():
-                    return True
+                    proc_path = proc.info['exe'] if proc.info['exe'] else ''
+                    INFO.logger.info(f"检查到{proc.info['name']}进程 - 当前路径为：{proc_path}")
+                    matching_processes.append(proc_path)
             except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                 pass
+
+        for path in matching_processes:
+            if os.path.normpath(self.appName_path) == os.path.normpath(path):
+                return True
         return False
+
+    # 关闭路径匹配成功的进程
+    def close_process(self):
+        for proc in psutil.process_iter(['name', 'exe']):
+            try:
+                if self.appName.lower() in proc.info['name'].lower():
+                    if os.path.normpath(self.appName_path) == os.path.normpath(proc.info['exe']):
+                        proc.kill()
+                        print(f"[ 进程关闭 ] 已关闭位于{proc.info['exe']} 的 {self.appName}")
+                        return
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                pass
 
     # 解压文件
     def unzip_files(self):
@@ -131,10 +188,10 @@ class TaskScheduler:
     def check_and_extract(self):
         palinject_version_file_path = os.path.join(self.palinject_dir, "palinject_version.txt")
         # 获取版本号,暂定默认跟随PALWORLD官方更新版本号
-        with zipfile.ZipFile(self.zip_file_path, 'r') as zip_ref:     # TODO 联网获取
+        with zipfile.ZipFile(self.zip_file_path, 'r') as zip_ref:
             with zip_ref.open("palinject_version.txt") as f:
                 zip_palplugin_version = f.readline().decode('utf-8').strip()
-        # 检查palinject_version.txt
+        # 检查palinject_version.txt版本号
         if os.path.isfile(palinject_version_file_path):
             with open(palinject_version_file_path, 'r', encoding='utf-8') as f:
                 installed_palplugin_version = f.readline().strip()
@@ -217,11 +274,15 @@ class TaskScheduler:
 
     # 启动服务端
     def start_program(self):
+        server_name = self.read_server_name()
+        safe_server_name = server_name.replace('|', '^|').replace(':', '^:')
+        INFO.logger.info(safe_server_name)
+        os.system(f'title {safe_server_name}')  # 设置标题
         INFO.logger.info("[ 启动任务 ] 正在启动程序......")
         print("[ 启动任务 ] 正在启动程序......")
 
         if self.palinject_enabled:
-            program_args = [os.path.join(self.palinject_dir, "PalServerInject.exe")]
+            program_args = [self.palinject_path]
         else:
             program_args = [self.program_path]
 
@@ -236,7 +297,10 @@ class TaskScheduler:
         INFO.logger.info(f"[ 启动任务 ] 启动参数：{program_args}")
 
         try:
-            subprocess.Popen(program_args)
+            program_args_str = ' '.join(map(str, program_args))
+            cmd = f'cmd.exe /c & start "{server_name}" {program_args_str}'
+            INFO.logger.info(cmd)
+            subprocess.Popen(cmd, creationflags=subprocess.CREATE_NEW_CONSOLE, shell=True)
 
         except FileNotFoundError:
             INFO.logger.error(f"[ 启动任务 ] 启动失败，请检查config.ini中main_directory路径配置")
@@ -262,7 +326,7 @@ class TaskScheduler:
                     else:
                         INFO.logger.error("[ RCON ] 无法在60秒内建立RCON连接")
                         print("[ RCON ] 无法在60秒内建立RCON连接")
-                        exit(0)
+                        sys.exit(0)
 
                     self.is_first_run = False
 
@@ -275,11 +339,11 @@ class TaskScheduler:
     def polling_task(self):
         while True:
             # 经测试等于1分钟时原版RCON会出现timeout
-            if self.restart_interval <= 60:
+            if self.restart_interval < 60:
                 INFO.logger.error("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于1分钟，请重新设置！")
                 print("[ 轮询任务 ] 服务器重启时间 restart_interval 必须大于1分钟，请重新设置！")
                 time.sleep(2)
-                exit(0)
+                sys.exit(0)
 
             # 启动程序前检查, 如果存在服务端则不再进行启动操作,改为每次循环结尾关闭进程
             is_running = self.is_palserver_running()
@@ -316,12 +380,14 @@ class TaskScheduler:
                                 self.send_shutdown_notice(j)
                             # 关服之前执行一次SAVE
                             if self.rcon_enabled:
-                                with self.connect_rcon() as client:
-                                    response = client.run("Save")
+                                success, response = self.send_rcon_command("Save")
+                                if success:
                                     INFO.logger.info('[ RCON ] 存档已保存 {0}'.format(response))
                                     print('\r[ RCON ] 存档已保存', response)
                                     time.sleep(3)
-                            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
+                                else:
+                                    INFO.logger.error('[ RCON ] 存档保存失败: {0}'.format(response))
+                            self.close_process()
                             self.is_first_run = True
                             time.sleep(5)
                             self.start_program()
@@ -331,26 +397,27 @@ class TaskScheduler:
                         INFO.logger.error("[ 内存监控 ] 轮询间隔 polling_interval_seconds 必须大于等于5秒，请重新设置！")
                         print("[ 内存监控 ] 轮询间隔 polling_interval_seconds 必须大于5秒，请重新设置！")
                         time.sleep(2)
-                        exit(0)
+                        sys.exit(0)
 
                 # 还剩 x 秒的时候发送rcon关服消息提醒
                 self.send_shutdown_notice(i)
 
             # 关服之前执行一次SAVE
             if self.rcon_enabled:
-                with self.connect_rcon() as client:
-                    response = client.run("Save")
+                success, response = self.send_rcon_command("Save")
+                if success:
                     INFO.logger.info('[ RCON ] 存档已保存 {0}'.format(response))
                     print('\r[ RCON ] 存档已保存', response)
                     time.sleep(3)
 
+
             # 关闭服务端
-            INFO.logger.info("[ 轮询任务 ] 正在关闭任何在运行的 PalServer 服务......")
+            INFO.logger.info("[ 轮询任务 ] 正在关闭配置文件指定运行的 PalServer 服务......")
             print("\r\033[K", end='')
             # 清空屏幕信息
             os.system('cls' if os.name == 'nt' else 'clear')
-            print("[ 轮询任务 ] 正在关闭任何在运行的 PalServer 服务......")
-            subprocess.run(['taskkill', '/f', '/im', self.appName], stderr=subprocess.DEVNULL)
+            print("[ 轮询任务 ] 正在关闭配置文件指定运行的 PalServer 服务......")
+            self.close_process()
 
             # 重启程序
             self.start_program()
@@ -404,22 +471,21 @@ class TaskScheduler:
                         INFO.logger.info('[ 重启通知 ] {0}'.format(resp.read().decode('utf-8')))
                     else:
                         INFO.logger.error('[ 请求错误 ] HTTP状态码: {0}'.format(resp.status))
-                        print('\r[ 请求错误 ] HTTP状态码:', resp.status)
                 except urllib.error.URLError as e:
                     INFO.logger.error('[ 请求错误 ] {0}'.format(e))
-                    print('\r[ 请求错误 ]', e)
         else:
             if self.rcon_enabled and self.rcon_command and countdown_str in self.shutdown_notice:
                 message = self.shutdown_notice[countdown_str]
-                with self.connect_rcon() as client:
-                    response = client.run(f"{self.rcon_command} {message}", 'utf-8')
+                success, response = self.send_rcon_command(f"{self.rcon_command} {message}")
+                if success:
                     INFO.logger.info('[ 指令发送 ] {0}'.format(response))
                     print('\r[ 指令发送 ]', response)
+                else:
+                    INFO.logger.error('[ 指令发送 ] 失败: {0}'.format(response))
 
 
 def main():
     Task = TaskScheduler()
-
     if Task.conf['palinject_enabled']:
         INFO.logger.info("[ 启动检测 ] 检测已开启注入模式")
         print("[ 启动检测 ] 检测已开启注入模式")
@@ -438,7 +504,7 @@ def main():
             Task.conf['daemon_time']))
         print("[ 守护进程 ] 守护进程已开启，延迟5秒启动避免双端开启，每隔{0}秒检查一次......".format(
             Task.conf['daemon_time']))
-        time.sleep(5)  # 再延迟5秒 避免脚本启动时双开服务端。尽量避免10结尾以免和[ 轮询任务 ] 倒计时同时结束
+        time.sleep(5)  # 延迟5秒避免双开服务端
         daemon_thread = threading.Thread(target=Task.start_daemon)
         daemon_thread.start()
 
