@@ -37,23 +37,29 @@ class Backup:
             print("\n自动备份已开启，正在进行备份......")
 
             while True:
-                datetime_now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+                try:
+                    datetime_now = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 
-                # 备份文件
-                shutil.copytree(self.backup_source, os.path.join(backup_dir, f"Saved_{datetime_now}"))
+                    # 备份文件
+                    shutil.copytree(self.backup_source, os.path.join(backup_dir, f"Saved_{datetime_now}"))
 
-                time.sleep(1)
-                INFO.logger.info("备份成功，文件名为：Saved_" + datetime_now)
-                print("\r备份成功，文件名为：Saved_" + datetime_now)
-                # 存档备份位置
-                backup_path = os.path.join(os.getcwd(), backup_dir)
-                print(f"\r存档备份位置：{backup_path}")
-                # 在备份执行前删除旧的备份
-                self.delete_old_backups(int(self.conf['del_old_backup_days']))
-                # 显示倒计时并等待指定的备份间隔
-                for i in range(int(self.conf['backup_interval']), 0, -1):
-                    print(f'\r下一次备份将在 {i} 秒后开始...', end='')
                     time.sleep(1)
+                    INFO.logger.info("备份成功，文件名为：Saved_" + datetime_now)
+                    print("\r备份成功，文件名为：Saved_" + datetime_now)
+                    # 存档备份位置
+                    backup_path = os.path.join(os.getcwd(), backup_dir)
+                    print(f"\r存档备份位置：{backup_path}")
+                    # 在备份执行前删除旧的备份
+                    self.delete_old_backups(int(self.conf['del_old_backup_days']))
+                    # 显示倒计时并等待指定的备份间隔
+                    for i in range(int(self.conf['backup_interval']), 0, -1):
+                        print(f'\r下一次备份将在 {i} 秒后开始...', end='')
+                        time.sleep(1)
+                except FileNotFoundError:
+                    INFO.logger.error(f"备份失败，请检查 config.ini 中 main_directory 游戏主目录配置是否正确")
+                    print(f"\r备份失败，请检查 config.ini 中 main_directory 游戏主目录配置是否正确")
+                    time.sleep(3)
+                    exit(0)
 
         # 备份时间必须大于等于60秒
         elif int(self.conf['backup_interval']) < 60:
