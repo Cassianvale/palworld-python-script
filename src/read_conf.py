@@ -26,12 +26,12 @@ def read_config():
     memory_monitor_enabled = config.getboolean('Memory', 'memory_monitor_enabled')
     polling_interval_seconds = config.getint('Memory', 'polling_interval_seconds')
     memory_usage_threshold = config.getint('Memory', 'memory_usage_threshold')
-    shutdown_notices = dict(item.split(':') for item in config.get('RCON', 'shutdown_notices').split(';'))
-    shutdown_notices_cn = dict(item.split(':') for item in config.get('RCON', 'shutdown_notices_cn').split(';'))
+    shutdown_notices = dict(item.split(':') for item in config.get('RCON', 'shutdown_notices', raw=True).split(';'))
+    shutdown_notices_cn = dict(item.split(':') for item in config.get('RCON', 'shutdown_notices_cn', raw=True).split(';'))
     rcon_enabled = config.getboolean('RCON', 'rcon_enabled')
     rcon_host = config.get('RCON', 'HOST')
     rcon_port = config.getint('RCON', 'PORT')
-    rcon_password = config.get('RCON', 'AdminPassword')
+    rcon_password = config.get('RCON', 'AdminPassword', raw=True)
     rcon_command = config.get('RCON', 'COMMAND')
 
     announcement_enabled = config.getboolean('Messages', 'announcement_enabled')
@@ -42,11 +42,11 @@ def read_config():
     for i in range(1, 11):  # 10个公告消息
         key = f'announcement_messages_{i}'
         if config.has_option('Messages', key):
-            message = config.get('Messages', key)
+            message = config.get('Messages', key, raw=True)
             announcement_messages.append(message)
         else:
             break
-        
+
     # 将小时和分钟转换为秒
     restart_interval = (restart_interval_hours * 60 + restart_interval_minutes) * 60
     backup_interval = (backup_interval_hours * 60 + backup_interval_minutes) * 60
