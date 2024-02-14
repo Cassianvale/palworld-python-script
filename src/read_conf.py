@@ -13,12 +13,9 @@ def read_config():
     with codecs.open('config.ini', 'r', encoding='utf-8-sig') as f:
         config.read_file(f)
     main_directory = config.get('Settings', 'main_directory')
-    backup_dir = config.get('Settings', 'backup_dir')
     arguments = config.get('Settings', 'arguments')
-    palinject_enabled = config.getboolean('Settings', 'PalInject_enabled')
+    palinject_enabled = config.getboolean('Messages', 'PalInject_enabled')
     use_multicore_options = config.getboolean('Settings', 'use_multicore_options')
-    backup_interval_hours = config.getint('Settings', 'backup_interval_hours')
-    backup_interval_minutes = config.getint('Settings', 'backup_interval_minutes')
     restart_interval_hours = config.getint('Settings', 'restart_interval_hours')
     restart_interval_minutes = config.getint('Settings', 'restart_interval_minutes')
     daemon_enabled = config.getboolean('Settings', 'daemon_enabled')
@@ -37,6 +34,11 @@ def read_config():
     announcement_enabled = config.getboolean('Messages', 'announcement_enabled')
     announcement_time = config.getint('Messages', 'announcement_time')
 
+    backup_dir = config.get('Backup', 'backup_dir')
+    del_old_backup_days = config.getint('Backup', 'del_old_backup_days')
+    backup_interval_hours = config.getint('Backup', 'backup_interval_hours')
+    backup_interval_minutes = config.getint('Backup', 'backup_interval_minutes')
+
     # 获取公告消息
     announcement_messages = []
     for i in range(1, 11):  # 10个公告消息
@@ -53,7 +55,6 @@ def read_config():
 
     return {
         'main_directory': main_directory,
-        'backup_dir': backup_dir,
         'arguments': arguments,
         'palinject_enabled': palinject_enabled,
         'use_multicore_options': use_multicore_options,
@@ -74,11 +75,12 @@ def read_config():
         'announcement_enabled': announcement_enabled,
         'announcement_time': announcement_time,
         'announcement_messages': announcement_messages,
+        'backup_dir': backup_dir,
+        'del_old_backup_days': del_old_backup_days,
     }
 
 
 if __name__ == '__main__':
     config = read_config()
-    # 打印config中所有配置
     print(json.dumps(config, indent=4))
 

@@ -49,7 +49,7 @@ class TaskScheduler:
         self.announcement_messages = self.conf['announcement_messages']
         self.arguments = self.conf.get('arguments', '').split()
         self.palinject_enabled = self.conf['palinject_enabled']
-        self.use_multicore_options= self.conf['use_multicore_options']
+        self.use_multicore_options = self.conf['use_multicore_options']
         self.is_first_run = True
         self.is_restarting = False
         self.current_announcement_index = 0
@@ -71,10 +71,10 @@ class TaskScheduler:
     def send_rcon_command(self, command):
         try:
             with Client(
-                host=self.host,
-                port=self.port,
-                passwd=self.passwd,
-                timeout=1) as client:
+                    host=self.host,
+                    port=self.port,
+                    passwd=self.passwd,
+                    timeout=1) as client:
                 response = client.run(command)
             return True, response
 
@@ -195,7 +195,7 @@ class TaskScheduler:
         if os.path.isfile(palinject_version_file_path):
             with open(palinject_version_file_path, 'r', encoding='utf-8') as f:
                 installed_palplugin_version = f.readline().strip()
-            if installed_palplugin_version >= zip_palplugin_version :
+            if installed_palplugin_version >= zip_palplugin_version:
                 print(f"[ 启动检测 ] 当前插件版本{installed_palplugin_version}，无需解压")
                 return
         print(f"[ 启动检测 ] 当前插件版本{zip_palplugin_version}，\n准备进行解压")
@@ -203,7 +203,8 @@ class TaskScheduler:
 
     # 修改 UE4SS-settings 防止有人默认不是dx11
     # 解压文件覆盖虽然一劳永逸 但是会影响已存在的配置
-    def modify_ue4ss_settings(self, settings_file_path):
+    @staticmethod
+    def modify_ue4ss_settings(settings_file_path):
         lines = []
         section_found = False
         key_found = False
@@ -334,7 +335,6 @@ class TaskScheduler:
                 INFO.logger.info("[ RCON ] 未开启RCON功能")
                 print("[ RCON ] 未开启RCON功能")
 
-
     # 轮询任务(固定延迟执行)
     def polling_task(self):
         while True:
@@ -371,7 +371,8 @@ class TaskScheduler:
                         if mem_usage > self.memory_usage_threshold:
                             self.is_restarting = True  # 开始重启
                             max_notice_time = max(map(int, self.shutdown_notice.keys()))  # 获取最大关服通知时间
-                            INFO.logger.error(f"[ 内存监控 ] 内存使用超过{self.memory_usage_threshold}%，正在重启程序......")
+                            INFO.logger.error(
+                                f"[ 内存监控 ] 内存使用超过{self.memory_usage_threshold}%，正在重启程序......")
                             print(f"\r[ 内存监控 ] 内存使用超过{self.memory_usage_threshold}%，正在重启程序......")
                             time.sleep(1)
                             # 倒计时关闭服务端
@@ -410,7 +411,6 @@ class TaskScheduler:
                     print('\r[ RCON ] 存档已保存', response)
                     time.sleep(3)
 
-
             # 关闭服务端
             INFO.logger.info("[ 轮询任务 ] 正在关闭配置文件指定运行的 PalServer 服务......")
             print("\r\033[K", end='')
@@ -421,7 +421,6 @@ class TaskScheduler:
 
             # 重启程序
             self.start_program()
-
 
     def start_daemon(self):
         # 守护进程
@@ -452,7 +451,6 @@ class TaskScheduler:
 
     def send_shutdown_notice(self, countdown):
         """Send a shutdown notice through RCON."""
-
 
         countdown_str = str(countdown)
         if self.palinject_enabled:
@@ -517,12 +515,12 @@ def main():
     if Task.conf['palinject_enabled']:
         if Task.conf['announcement_enabled']:
             INFO.logger.info("[ 定时公告 ] 已启动，每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
-            print("[ 定时公告 ] 已启动，每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
+            print("\r[ 定时公告 ] 已启动，每隔{0}秒发送公告信息......".format(Task.conf['announcement_time']))
             time.sleep(30)
             Task.send_notice()  # 公告
         else:
             INFO.logger.info("[ 定时公告 ] 未启动，announcement_enabled开关为False")
-            print("[ 定时公告 ] 未启动，announcement_enabled开关为False")
+            print("\r[ 定时公告 ] 未启动，announcement_enabled开关为False")
     else:
         INFO.logger.info("[ 定时公告 ] 未启动，palinject_enabled开关为False")
         print("[ 定时公告 ] 未启动，palinject_enabled开关为False")
