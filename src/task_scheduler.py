@@ -125,6 +125,8 @@ class TaskScheduler:
                         if match:
                             server_name = match.group(1)  # 提取 ServerName
                         break
+                INFO.logger.info(f"[ 配置读取 ] 读取 ServerName 成功: {server_name}")
+                print(f"[ 配置读取 ] 读取 ServerName 成功: {server_name}")
         except FileNotFoundError:
             INFO.logger.error(f"[ 配置读取 ] 找不到文件 {settings_file_path}")
             print(f"[ 配置读取 ] 找不到文件 {settings_file_path}")
@@ -298,9 +300,10 @@ class TaskScheduler:
         INFO.logger.info(f"[ 启动任务 ] 启动参数：{program_args}")
 
         try:
-            program_args_str = ' '.join(map(str, program_args))
+            program_args_str = ' '.join(f'"{arg}"' for arg in program_args)
             cmd = f'cmd.exe /c & start "{server_name}" {program_args_str}'
             INFO.logger.info(cmd)
+            print(cmd)
             subprocess.Popen(cmd, creationflags=subprocess.CREATE_NEW_CONSOLE, shell=True)
 
         except FileNotFoundError:
